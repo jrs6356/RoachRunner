@@ -1,0 +1,321 @@
+Digipot Initialized
+Digipot Initialized
+
+-----------------------------------------------------
+ADC:	Q1Z
+Setup 1 - Use For Offset Calibration
+Setup 2 - Use For Gain Calibration
+Setup 3 - Use For Continuous Measurement (Calibrated)
+Setup 4 - Use For Continuous Measurement (Uncalibrated)
+Setup 5
+Setup 6
+Setup 7
+Setup 8
+Channel 1 Offset
+Channel 2 Offset
+Channel 1 Gain
+Channel 2 Gain
+
+		-------- Q1Z Start SPI --------
+
+		-------- Q1Z Clock Check --------
+
+Clock Active?	0
+Is this ADC the Timekeeper?	1
+	Starting Clock...
+	4.941 MHz MCLK Activated
+Clock Active?	1
+
+		-------- Q1Z SPIS --------
+
+SYNC Commands Sent: ADC Q1Z's Serial Port Initialized
+
+		-------- Q1Z SRS --------
+
+------ Configuration ------
+OUT:	0001 | 0000 | 0000 | 0000 | 0000 | 0000 | 0000 | 0000
+PSS:	0 - Standby Mode
+PDW:	0 - Normal Operation
+RS:	0 - Normal Operation
+RV:	1 - System Reset Successful
+IS:	0 - Normal Input
+GB:	0 - Normal Operation of A0 as Output Latch
+VRS:	0 - (HIGH: A = 2) 2.5V < Vref <= [(VA+)-(VA-)]
+A1:	0 - Logical LOW
+A0:	0 - Logical LOW
+OLS:	0 - Channel-Setup Register is Source for A0 and A1
+OGS:	0 - Calibration Registers Based on CS1-CS0 from Referenced Setup
+FRS:	0 - Use Default Output Word Rates
+
+		-------- Q1Z Set VRS --------
+
+------ Configuration ------
+OUT:	0000 | 0000 | 0001 | 0000 | 0000 | 0000 | 0000 | 0000
+PSS:	0 - Standby Mode
+PDW:	0 - Normal Operation
+RS:	0 - Normal Operation
+RV:	0 - Normal Operation
+IS:	0 - Normal Input
+GB:	0 - Normal Operation of A0 as Output Latch
+VRS:	0 - (HIGH: A = 2) 2.5V < Vref <= [(VA+)-(VA-)]
+A1:	0 - Logical LOW
+A0:	0 - Logical LOW
+OLS:	0 - Channel-Setup Register is Source for A0 and A1
+OGS:	1 - Calibration Registers Based on OG1-OG0 from Referenced Setup
+FRS:	0 - Use Default Output Word Rates
+
+		-------- Q1Z Set CSRs --------
+
+------ Setup 1 - Use For Offset Calibration ------
+OUT:	0000 | 1010 | 0000 | 0000
+CS:	00 - Physical Channel 1
+G:	001 - Gain = 2
+WR:	0100 - WR = 7.50 Sps
+UB:	0 - Bipolar Mode
+OL:	00 - A0 = 0, A1 = 0
+DT:	0 - Begin Conversions Immediately
+OCD:	0 - Normal Mode
+OG:	00 - Use Offset/Gain From Channel 1 (In Use: OGS = 1)
+
+------ Setup 2 - Use For Gain Calibration ------
+OUT:	0000 | 1010 | 0000 | 0000
+CS:	00 - Physical Channel 1
+G:	001 - Gain = 2
+WR:	0100 - WR = 7.50 Sps
+UB:	0 - Bipolar Mode
+OL:	00 - A0 = 0, A1 = 0
+DT:	0 - Begin Conversions Immediately
+OCD:	0 - Normal Mode
+OG:	00 - Use Offset/Gain From Channel 1 (In Use: OGS = 1)
+
+------ Setup 3 - Use For Continuous Measurement (Calibrated) ------
+OUT:	0000 | 1000 | 0000 | 0000
+CS:	00 - Physical Channel 1
+G:	001 - Gain = 2
+WR:	0000 - WR = 120.00 Sps
+UB:	0 - Bipolar Mode
+OL:	00 - A0 = 0, A1 = 0
+DT:	0 - Begin Conversions Immediately
+OCD:	0 - Normal Mode
+OG:	00 - Use Offset/Gain From Channel 1 (In Use: OGS = 1)
+
+------ Setup 4 - Use For Continuous Measurement (Uncalibrated) ------
+OUT:	0000 | 1000 | 0000 | 0001
+CS:	00 - Physical Channel 1
+G:	001 - Gain = 2
+WR:	0000 - WR = 120.00 Sps
+UB:	0 - Bipolar Mode
+OL:	00 - A0 = 0, A1 = 0
+DT:	0 - Begin Conversions Immediately
+OCD:	0 - Normal Mode
+OG:	01 - Use Offset/Gain From Channel 2 (In Use: OGS = 1)
+
+-------- Q1Z Flight Check --------
+Pins Declared?			1
+Clock Started?			1
+Arduino SPI ready?		1
+ADC SPI Initialized?		1
+ADC Reset Valid?		1
+VRS Bit Set?			1
+OGS Bit Set?			1
+CSRs Set?			1
+Offset Register Updated?	0	!! WARNING: UNCALIBRATED OFFSET !!
+Gain Register Updated?		0	!! WARNING: UNCALIBRATED GAIN !!
+Ready to Measure?		1
+Array Fully Prepped?		0
+------------------------
+
+		-------- Q1Z System Offset Cal --------
+
+------ Command B ------
+OUT:	1000 | 0101
+MC:	0 - Perform a Single Conversion
+CSRP:	000 - Setup 1
+CC:	101 - System-Offset Calibration
+
+------ Channel 1 Offset ------
+OUT:	0000 | 0001 | 0110 | 1010 | 1001 | 0101 | 0000 | 0000
+Offset:	5.532563 E-3
+2^-1:	0
+2^-2:	0
+2^-3:	0
+2^-4:	0
+2^-5:	0
+2^-6:	0
+2^-7:	0
+2^-8:	1
+2^-9:	0
+2^-10:	1
+2^-11:	1
+2^-12:	0
+2^-13:	1
+2^-14:	0
+2^-15:	1
+2^-16:	0
+2^-17:	1
+2^-18:	0
+2^-19:	0
+2^-20:	1
+2^-21:	0
+2^-22:	1
+2^-23:	0
+2^-24:	1
+		-------- Q1Z System Gain Cal --------
+
+------ Command B ------
+OUT:	1000 | 0110
+MC:	0 - Perform a Single Conversion
+CSRP:	000 - Setup 1
+CC:	110 - System-Gain Calibration
+
+------ Channel 1 Gain ------
+OUT:	0000 | 0001 | 0111 | 1101 | 0001 | 0000 | 1011 | 1010
+Gain:	1.488536	[1.488536 E0]
+
+2^5:	0
+2^4:	0
+2^3:	0
+2^2:	0
+2^1:	0
+2^0:	1
+2^-1:	0
+2^-2:	1
+2^-3:	1
+2^-4:	1
+2^-5:	1
+2^-6:	1
+2^-7:	0
+2^-8:	1
+2^-9:	0
+2^-10:	0
+2^-11:	0
+2^-12:	1
+2^-13:	0
+2^-14:	0
+2^-15:	0
+2^-16:	0
+2^-17:	1
+2^-18:	0
+2^-19:	1
+2^-20:	1
+2^-21:	1
+2^-22:	0
+2^-23:	1
+2^-24:	0
+		-------- Q1Z Single Measurement --------
+
+------ Command B ------
+OUT:	1001 | 0000
+MC:	0 - Perform a Single Conversion
+CSRP:	010 - Setup 3
+CC:	Invalid Word
+
+------ Configuration ------
+OUT:	0000 | 0000 | 0001 | 0000 | 0000 | 0000 | 0000 | 0000
+PSS:	0 - Standby Mode
+PDW:	0 - Normal Operation
+RS:	0 - Normal Operation
+RV:	0 - Normal Operation
+IS:	0 - Normal Input
+GB:	0 - Normal Operation of A0 as Output Latch
+VRS:	0 - (HIGH: A = 2) 2.5V < Vref <= [(VA+)-(VA-)]
+A1:	0 - Logical LOW
+A0:	0 - Logical LOW
+OLS:	0 - Channel-Setup Register is Source for A0 and A1
+OGS:	1 - Calibration Registers Based on OG1-OG0 from Referenced Setup
+FRS:	0 - Use Default Output Word Rates
+
+-------- Q1Z Flight Check --------
+Pins Declared?			1
+Clock Started?			1
+Arduino SPI ready?		1
+ADC SPI Initialized?		1
+ADC Reset Valid?		1
+VRS Bit Set?			1
+OGS Bit Set?			1
+CSRs Set?			1
+Offset Register Updated?	1
+Gain Register Updated?		1
+Ready to Measure?		1
+Array Fully Prepped?		0
+------------------------
+
+------ Conversion Register ------
+Configured:			Yes
+Ready:				Yes
+Active:				No
+Sample Continuously:		No
+Polarity:			Bipolar
+Vref Range:			2.5V < Vref <= [(VA+)-(VA-)]
+Vref (Approx):			4.60
+VA (Approx):			5.00
+Sampling Gain:			G = 2.00
+				A = 2.00
+Full-Scale Input Range:		Vfs = 1.15 V
+Channel-Setup Used:		Setup 3 - Use For Continuous Measurement (Calibrated)
+Offset Calibration Method:	System Offset - Bias - Voltage Divider
+Offset Calibration Value:	O = 5.532563 E-3
+Gain Calibration Method:	System Gain - Full Scale - Voltage Divider
+Gain Calibration Value:		G = 1.488536 E0
+Output Word Rate:		120.00 Sps
+
+Meas:	-0.269787 V
+
+		-------- Q1Z Single Measurement --------
+
+------ Command B ------
+OUT:	1001 | 1000
+MC:	0 - Perform a Single Conversion
+CSRP:	011 - Setup 4
+CC:	Invalid Word
+
+------ Configuration ------
+OUT:	0000 | 0000 | 0001 | 0000 | 0000 | 0000 | 0000 | 0000
+PSS:	0 - Standby Mode
+PDW:	0 - Normal Operation
+RS:	0 - Normal Operation
+RV:	0 - Normal Operation
+IS:	0 - Normal Input
+GB:	0 - Normal Operation of A0 as Output Latch
+VRS:	0 - (HIGH: A = 2) 2.5V < Vref <= [(VA+)-(VA-)]
+A1:	0 - Logical LOW
+A0:	0 - Logical LOW
+OLS:	0 - Channel-Setup Register is Source for A0 and A1
+OGS:	1 - Calibration Registers Based on OG1-OG0 from Referenced Setup
+FRS:	0 - Use Default Output Word Rates
+
+-------- Q1Z Flight Check --------
+Pins Declared?			1
+Clock Started?			1
+Arduino SPI ready?		1
+ADC SPI Initialized?		1
+ADC Reset Valid?		1
+VRS Bit Set?			1
+OGS Bit Set?			1
+CSRs Set?			1
+Offset Register Updated?	0	!! WARNING: UNCALIBRATED OFFSET !!
+Gain Register Updated?		0	!! WARNING: UNCALIBRATED GAIN !!
+Ready to Measure?		1
+Array Fully Prepped?		0
+------------------------
+
+------ Conversion Register ------
+Configured:			Yes
+Ready:				Yes
+Active:				No
+Sample Continuously:		No
+Polarity:			Bipolar
+Vref Range:			2.5V < Vref <= [(VA+)-(VA-)]
+Vref (Approx):			4.60
+VA (Approx):			5.00
+Sampling Gain:			G = 2.00
+				A = 2.00
+Full-Scale Input Range:		Vfs = 1.15 V
+Channel-Setup Used:		Setup 4 - Use For Continuous Measurement (Uncalibrated)
+Offset Calibration Method:	Uncalibrated
+Offset Calibration Value:	O = 0.0000 E0
+Gain Calibration Method:	Uncalibrated
+Gain Calibration Value:		G = 1.000000 E0
+Output Word Rate:		120.00 Sps
+
+-0.504700 V

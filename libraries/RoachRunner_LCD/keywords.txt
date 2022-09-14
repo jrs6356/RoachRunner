@@ -1,0 +1,59 @@
+#######################################
+# Syntax Coloring Map SPI
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+LCD	KEYWORD1
+dpot	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+init	KEYWORD2
+contrast	KEYWORD2
+clear	KEYWORD2
+home	KEYWORD2
+command	KEYWORD2
+writeData	KEYWORD2
+writeRow	KEYWORD2
+writeChar	KEYWORD2
+print	KEYWORD2
+setCursor	KEYWORD2
+scroll	KEYWORD2
+makeExtraChars	KEYWORD2
+loadingBar	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+clock3	LITERAL1
+clock6	LITERAL1
+clock9	LITERAL1
+clock12	LITERAL1
+backArrow	LITERAL1
+ellipsis	LITERAL1
+menuUp	LITERAL1
+menuDown	LITERAL1
+arrowR	LITERAL1
+arrowL	LITERAL1
+degree	LITERAL1
+alpha	LITERAL1
+beta	LITERAL1
+epsilon	LITERAL1
+mew	LITERAL1
+sigma	LITERAL1
+Sigma	LITERAL1
+rho	LITERAL1
+sqrt	LITERAL1
+theta	LITERAL1
+infinity	LITERAL1
+omega	LITERAL1
+pi	LITERAL1
+divideMath	LITERAL1
+blank	LITERAL1
+black	LITERAL1
+brightness	LITERAL1
+con_init	LITERAL1
