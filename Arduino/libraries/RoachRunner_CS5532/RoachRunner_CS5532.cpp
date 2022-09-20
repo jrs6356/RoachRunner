@@ -767,6 +767,9 @@ void GainReg::rolecall(){
 	Serial.print("\n------ ");Serial.print(name);Serial.println(" ------");
 	Serial.print("OUT:\t");
 	print32(out);
+	Serial.print("\t( ");
+	Serial.print(out);
+	Serial.print(" )");
 	parse();
 	convert();
 	Serial.print("\nGain:\t");
@@ -1082,6 +1085,9 @@ void OffsetReg::rolecall(){
 	Serial.print("\n------ ");Serial.print(name);Serial.println(" ------");
 	Serial.print("OUT:\t");
 	print32(out);
+	Serial.print("\t( ");
+	Serial.print(out);
+	Serial.print(" )");
 	parse();
 	convert();
 	Serial.print("\nOffset:\t");
@@ -1600,8 +1606,8 @@ void CS5532::CSRinit(){
 	//setup7.G = G32;
 	//setup8.G = G32;
 	
-	setup1.WR = WR240;
-	setup2.WR = WR960;
+	setup1.WR = WR7_5;
+	setup2.WR = WR120;
 	setup3.WR = WR240;
 	setup4.WR = WR960;
 	//setup5.WR = WR7_5;
@@ -2623,28 +2629,10 @@ void CS5532::scan(){
 
 	int b16a = inA;
 	int b16b = inB;
-	in = 0;
+	in = (inA << 16) | inB;
 	
 	for(int i=0;i<32;++i){
-		d32[i] = 0;
-		//Serial.print(d[i]);
-	}
-	for(int i=0;i<16;++i){
-		if(b16a>=pow(2,15-i)){
-			d32[i] = 1;
-			b16a = b16a - pow(2,15-i);
-		}
-		//Serial.print(d32[i]);
-	}
-	for(int i=0;i<16;++i){
-		if(b16b>=pow(2,15-i)){
-			d32[i+16] = 1;
-			b16b = b16b - pow(2,15-i);
-		}
-		//Serial.print(d32[i+16]);
-	}
-	for(int i=0;i<32;++i){
-		in = in + d32[i]*pow(2,31-i);
+		d32[i] = 1&(in>>i);
 	}
 }
 
@@ -2806,31 +2794,31 @@ void CS5532::readReg(reg r){
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup2):
-			comA.CS = CH2;
+			comA.CS = CH1;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup3):
-			comA.CS = CH3;
+			comA.CS = CH2;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup4):
-			comA.CS = CH4;
+			comA.CS = CH2;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup5):
-			comA.CS = SETUP5;
+			comA.CS = CH3;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup6):
-			comA.CS = SETUP6;
+			comA.CS = CH3;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup7):
-			comA.CS = SETUP7;
+			comA.CS = CH4;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Setup8):
-			comA.CS = SETUP8;
+			comA.CS = CH4;
 			comA.RSB = RSB_CSR;
 			break;
 		case(Gain1):
@@ -2964,48 +2952,64 @@ void CS5532::writeReg(reg r){
 			comA.CS = CH1;
 			comA.RSB = RSB_CSR;
 			setup1.merge();
+			setup2.merge();
 			outA = setup1.out;
+			outB = setup2.out;
 			break;
 		case(Setup2):
-			comA.CS = CH2;
+			comA.CS = CH1;
 			comA.RSB = RSB_CSR;
+			setup1.merge();
 			setup2.merge();
+			outA = setup1.out;
 			outB = setup2.out;
 			break;
 		case(Setup3):
-			comA.CS = CH3;
+			comA.CS = CH2;
 			comA.RSB = RSB_CSR;
 			setup3.merge();
+			setup4.merge();
 			outA = setup3.out;
+			outB = setup4.out;
 			break;
 		case(Setup4):
-			comA.CS = CH4;
+			comA.CS = CH2;
 			comA.RSB = RSB_CSR;
+			setup3.merge();
 			setup4.merge();
+			outA = setup3.out;
 			outB = setup4.out;
 			break;
 		case(Setup5):
-			comA.CS = SETUP5;
+			comA.CS = CH3;
 			comA.RSB = RSB_CSR;
 			setup5.merge();
+			setup6.merge();
 			outA = setup5.out;
+			outB = setup6.out;
 			break;
 		case(Setup6):
-			comA.CS = SETUP6;
+			comA.CS = CH3;
 			comA.RSB = RSB_CSR;
+			setup5.merge();
 			setup6.merge();
+			outA = setup5.out;
 			outB = setup6.out;
 			break;
 		case(Setup7):
-			comA.CS = SETUP7;
+			comA.CS = CH4;
 			comA.RSB = RSB_CSR;
 			setup7.merge();
+			setup8.merge();
 			outA = setup7.out;
+			outB = setup8.out;
 			break;
 		case(Setup8):
-			comA.CS = SETUP8;
+			comA.CS = CH4;
 			comA.RSB = RSB_CSR;
+			setup7.merge();
 			setup8.merge();
+			outA = setup7.out;
 			outB = setup8.out;
 			break;
 		case(Gain1):

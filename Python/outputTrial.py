@@ -53,13 +53,12 @@ def serial_monitor():
     serCSV = open('SerialData.csv', mode='r+', newline='')
     serCSV.truncate(0)
     serCSVWriter = csv.writer(serCSV)
-    df = pd.DataFrame()#read_csv('SerialData.csv')
+    df = pd.DataFrame()
     v1 = []
     v2 = []
     v3 = []
     v4 = []
     v5 = []
-    #serCSVReader = csv.reader(serCSV)
 
     #---------------Page Variables
 
@@ -88,10 +87,11 @@ def serial_monitor():
     ts = tk.IntVar(master=window, value=0)  #timestamp
     datRead = tk.IntVar(master=window, value=0)
     rst = tk.IntVar(master=window, value=0)
-    page = tk.IntVar(master=window, value=0)
-    datSel = tk.IntVar(master=window, value=0)
+    page = tk.IntVar(master=window, value=1)
+    datSel = tk.IntVar(master=window, value=6)
     index = tk.IntVar(master=window, value=0)
     nPars = tk.IntVar(master=window, value=0)
+    plotType = tk.IntVar(master=window, value=0)
 
         #generalDouble = tk.DoubleVar(master=window, value=0.0)
     y0 = tk.DoubleVar(master=window, value=0.0)
@@ -101,6 +101,7 @@ def serial_monitor():
     def setup():
         print('Setup')
         try:
+            plotter()
             window.update_idletasks()
             window.update()
             screenPrint("\n\n===== SERIAL PORT CONNECTED =====\n\n")
@@ -196,43 +197,12 @@ def serial_monitor():
             datRead.set(False)
             index.set(0)
             serFile.truncate(0)
-            serCSV.truncate(0)
+            #serCSV.truncate(0)
+            datAllButton.pack_forget()
         elif "#END" in out:
             datAct.set(False)
             print("Data Collected")
-            serFile.seek(0)
-            serCSV.seek(0)
-            data = serFile.readlines()
-            nPars.set(1)
-            out = 'x1'
-            for line in data:
-                while ',' in line:
-                    line = line.partition(',')[2]
-                    nPars.set(nPars.get()+1)
-                    out = out+',x'+str(nPars.get())
-                break
-            serCSVWriter.writerow(out.split(','))
-            print(nPars.get())
-            for line in data:
-                #dataScreen.insert(tk.INSERT, line+'\n')
-                serCSVWriter.writerow(line.rstrip().split(','))
-            serFile.seek(0)
-            serCSV.seek(0)
-            df = pd.read_csv('SerialData.csv')
-            
-            if not input1.get()=='':
-                v1[:] = df[input1.get()]
-            if not input2.get()=='':
-                v2[:] = df[input2.get()]
-            if not input3.get()=='':
-                v3[:] = df[input3.get()]
-            if not input4.get()=='':
-                v4[:] = df[input4.get()]
-            if not input5.get()=='':
-                v5[:] = df[input5.get()]
-            serCSV.seek(0)
-            serFile.seek(0)
-            datReady.set(True)
+            logCSV()
         else:
             if datAct.get():
                 serFile.write(out.rstrip()+'\n')
@@ -260,100 +230,68 @@ def serial_monitor():
         plotterDataWindowFrame.pack_forget()
         datWin.set(False)
 
-    def addTab(event):
+    def addTab():
         dat1Button.pack_forget()
         dat2Button.pack_forget()
         dat3Button.pack_forget()
         dat4Button.pack_forget()
         dat5Button.pack_forget()
-        #nPars.set(0)
-        datID.set('')
-        out = ''
-        if nPars.get()>0:
-            if not input1.get()=='':
-                dat1Button.pack(side=tk.LEFT)
-                #nPars.set(nPars.get()+1)
-                #datID.set(input1.get())
-                out = input1.get()
-            else:
-                out = 'x1'
-            print(out)
-        if nPars.get()>1:
-            if not input2.get()=='':
-                dat2Button.pack(side=tk.LEFT)
-                #nPars.set(nPars.get()+1)
-                #datID.set(','+datID.get()+input2.get())
-                out = out+',' + input2.get()
-            else:
-                out = out+',x2'
-            print(out)
-        if nPars.get()>2:
-            if not input3.get()=='':
-                dat3Button.pack(side=tk.LEFT)
-                #nPars.set(nPars.get()+1)
-                #datID.set(','+datID.get()+input3.get())
-                out = out + ',' + input3.get()
-            else:
-                out = out+',x3'
-            print(out)
-        if nPars.get()>3:
-            if not input4.get()=='':
-                dat4Button.pack(side=tk.LEFT)
-                #nPars.set(nPars.get()+1)
-                #datID.set(','+datID.get()+input4.get())
-                out = out + ',' + input4.get()
-            else:
-                out = out+',x4'
-            print(out)
-        if nPars.get()>4:
-            if not input5.get()=='':
-                dat5Button.pack(side=tk.LEFT)
-                #nPars.set(nPars.get()+1)
-                #datID.set(','+datID.get()+input5.get())
-                out = out + ',' + input5.get()
-            else:
-                out = out+',x5'
-            print(out)
-            
-        #if datID.get()=='':
-        datID.set(out)
-        #else:
-            #datID.set(datID.get()[:-1])
+        if not input1.get()=='':
+            dat1Button.pack(side=tk.LEFT)
+        if not input2.get()=='':
+            dat2Button.pack(side=tk.LEFT)
+        if not input3.get()=='':
+            dat3Button.pack(side=tk.LEFT)
+        if not input4.get()=='':
+            dat4Button.pack(side=tk.LEFT)
+        if not input5.get()=='':
+            dat5Button.pack(side=tk.LEFT)
 
+
+    def logCSV():
+        print('LogCSV')
+        serFile.seek(0)
+        serCSV.seek(0)
+        data = serFile.readlines()
+        datID.set(data[0].rstrip())
+        print(datID.get())
+        nPars.set(data[0].count(',')+1)
         print(nPars.get())
-        print(datID.get()) 
-            
-        if datReady.get():
-            serCSV.seek(0)
-            serCSVWriter.writerow(datID.get().split(','))
-            serCSV.seek(0)
-            df = pd.read_csv('SerialData.csv')
-            serCSV.seek(0)
-            if not input1.get()=='':
-                v1[:] = df[input1.get()]
-            if not input2.get()=='':
-                v2[:] = df[input2.get()]
-            if not input3.get()=='':
-                v3[:] = df[input3.get()]
-            if not input4.get()=='':
-                v4[:] = df[input4.get()]
-            if not input5.get()=='':
-                v5[:] = df[input5.get()]
-                
+        for line in data:
+            serCSVWriter.writerow(line.rstrip().split(','))
+        serFile.seek(0)
+        serCSV.seek(0)
+        df = pd.read_csv('SerialData.csv')
+        for col in df:
+            if input1.get()=='':
+                input1.set(col)
+            elif input2.get()=='':
+                input2.set(col)
+            elif input3.get()=='':
+                input3.set(col)
+            elif input4.get()=='':
+                input4.set(col)
+            elif input5.get()=='':
+                input5.set(col)
         
-        #print(datID.get())
-        #print(out)
-        #serCSV.seek(0)
-        #serCSVWriter.writerow(datID.get().split(','))
-        #serCSVWriter.writerow(out.split(','))
-        #serCSV.seek(0)
-        
-        datPrint()
+        if not input1.get()=='':
+            v1[:] = df[input1.get()]
+        if not input2.get()=='':
+            v2[:] = df[input2.get()]
+        if not input3.get()=='':
+            v3[:] = df[input3.get()]
+        if not input4.get()=='':
+            v4[:] = df[input4.get()]
+        if not input5.get()=='':
+            v5[:] = df[input5.get()]
+        serFile.seek(0)
+        datReady.set(True)
+        datAllButton.pack(side=tk.LEFT)
+        addTab()
 
     def datPrint():
         #print('Screen Print')
         dataScreen.delete(1.0, tk.END)
-        #df = pd.read_csv('SerialData.csv')
 
         if datSel.get()==6:
             print("Plotter Serial Monitor")
@@ -361,33 +299,13 @@ def serial_monitor():
             dataScreen.see("end")
         elif datSel.get()==7:
             print("All Data")
-            #data = serFile.readlines()
-            #print("Data Entries:\t",len(data))
-            #dataScreen.insert(tk.INSERT, datID.get()+'\n')
-            #serCSV.seek(0)
-            #serCSVWriter.writerow(datID.get().split(','))
-            #serCSV.seek(0)
-            serCSVReader = csv.reader(serCSV)
-            #print(datID.get().split(','))
-            for line in serCSVReader:
-                dataScreen.insert(tk.INSERT, line)
-                dataScreen.insert(tk.INSERT, '\n')
-                #serCSVWriter.writerow(line.rstrip().split(','))
+            df = pd.read_csv('SerialData.csv')
+            dataScreen.insert(tk.INSERT, (datID.get()+'\n'))
+            for i in df.index:
+                out = str(v1[i])+', '+str(v2[i])+', '+str(v3[i])+'\n'
+                dataScreen.insert(tk.INSERT, out)
             serFile.seek(0)
             serCSV.seek(0)
-            #df = pd.read_csv('SerialData.csv')
-            
-##            if not input1.get()=='':
-##                v1[:] = df[input1.get()]
-##            if not input2.get()=='':
-##                v2[:] = df[input2.get()]
-##            if not input3.get()=='':
-##                v3[:] = df[input3.get()]
-##            if not input4.get()=='':
-##                v4[:] = df[input4.get()]
-##            if not input5.get()=='':
-##                v5[:] = df[input5.get()]
-##            serCSV.seek(0)
             
         elif datSel.get()==1:
             for line in v1:
@@ -432,8 +350,11 @@ def serial_monitor():
     plotterDisplayFrame             = tk.Frame(master=plotterFrame)
     plotterCanvasFrame              = tk.Frame(master=plotterDisplayFrame, relief=border, borderwidth=bw)
     plotterVariableFrame            = tk.Frame(master=plotterFrame, relief=border, borderwidth=bw)
-    plotterVariableEntryFrame       = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)
-    plotterVariableSelectFrame      = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)
+    plotterVariableNameFrame        = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
+    plotterVariableEntryFrame       = tk.Frame(master=plotterVariableNameFrame)#, relief=border, borderwidth=bw)
+    plotterVariableSelectFrame      = tk.Frame(master=plotterVariableNameFrame)#, relief=border, borderwidth=bw)
+    plotterVariableBoxFrame         = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
+    plotterPlotSelectFrame          = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
     plotterDataWindowFrame          = tk.Frame(master=plotterDisplayFrame, relief=border, borderwidth=bw)
 
     dataWindowHeaderFrame           = tk.Frame(master=plotterDataWindowFrame, relief=border, borderwidth=bw)
@@ -458,6 +379,7 @@ def serial_monitor():
     
         #generalCanvas = tk.Canvas(master=generalCanvasFrame)
     plotterCanvas           = tk.Canvas(master=plotterCanvasFrame, bg=color)
+    #plotterCanvas           = FigureCanvasTkAgg(master=plotterCanvasFrame)
 
         #generalScroll = tk.Scrollbar(master=generalScrollFrame, bg=color, variable=sc1)
     textScroll              = tk.Scrollbar(master=printFrame, orient=tk.VERTICAL)
@@ -469,11 +391,11 @@ def serial_monitor():
     plotterEntry3           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input3, font=MEDFONT, width=5, bd=4)
     plotterEntry4           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input4, font=MEDFONT, width=5, bd=4)
     plotterEntry5           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input5, font=MEDFONT, width=5, bd=4)
-    plotterEntry1.bind('<Any-KeyRelease>',addTab)
-    plotterEntry2.bind('<Any-KeyRelease>',addTab)
-    plotterEntry3.bind('<Any-KeyRelease>',addTab)
-    plotterEntry4.bind('<Any-KeyRelease>',addTab)
-    plotterEntry5.bind('<Any-KeyRelease>',addTab)
+##    plotterEntry1.bind('<Any-KeyRelease>',addTab)
+##    plotterEntry2.bind('<Any-KeyRelease>',addTab)
+##    plotterEntry3.bind('<Any-KeyRelease>',addTab)
+##    plotterEntry4.bind('<Any-KeyRelease>',addTab)
+##    plotterEntry5.bind('<Any-KeyRelease>',addTab)
 
     plotterSelect1          = tk.Entry(master=plotterVariableSelectFrame, textvariable=par1, font=MEDFONT, width=5, bd=4)
     plotterSelect2          = tk.Entry(master=plotterVariableSelectFrame, textvariable=par2, font=MEDFONT, width=5, bd=4)
@@ -503,6 +425,8 @@ def serial_monitor():
 
     datWinXButton = tk.Button(master=dataWindowHeaderFrame, text='X', command=datWinX, font=BUTTONFONT,
                               height=12, width=12, image=pixel, compound="center")
+
+    plotButton = tk.Button(master=plotterVariableSelectFrame, text='Plot', command=setPlot, font=LARGEFONT)
     
         #generalRadioButton = tk.Radiobutton(master=generalRadioButtonFrame, text="General", bg=color, font=MEDFONT, variable=bu1, value=0, activebackground=color)
     monitorButton = tk.Radiobutton(master=headerFrame, text="  Serial Monitor  ", font=MEDFONT, variable=page,
@@ -528,7 +452,17 @@ def serial_monitor():
         #generalBox = tk.Checkbutton(master=generalBoxFrame, text="General", variable=bx1, bg=color, activebackground=color)
     autoscrollBox = tk.Checkbutton(master=boxFrame, text="Autoscroll", variable=auto)
     timestampBox = tk.Checkbutton(master=boxFrame, text="Show Timestamp", variable=ts)
-    dataWindowBox = tk.Checkbutton(master=plotterVariableFrame, text="Show Data Window", variable=datWin, command=showData)
+    dataWindowBox = tk.Checkbutton(master=plotterVariableBoxFrame, text="Show Data Window", variable=datWin,
+                                   command=showData)
+
+        #generalMenu = tk.OptionMenu(master...)
+    plotterMenu = tk.Menubutton(master=plotterPlotSelectFrame, text="Plot Type", relief=tk.RAISED)
+    plotterMenu.menu = tk.Menu(master=plotterMenu, tearoff=0)
+    plotterMenu["menu"] = plotterMenu.menu
+    plotterMenu.menu.add_radiobutton(label="y = f(x)", variable=plotType, value=0)
+    plotterMenu.menu.add_radiobutton(label="FFT", variable=plotType, value=1)
+    plotterMenu.menu.add_radiobutton(label="Calibration Curve", variable=plotType, value=2)
+    
         
     #---------------Page Formatting
 
@@ -549,8 +483,11 @@ def serial_monitor():
     plotterUIIndicatorLabelFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
     plotterDisplayFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     plotterVariableFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
-    plotterVariableEntryFrame.pack(side=tk.BOTTOM, fill=tk.Y, pady=15)
-    plotterVariableSelectFrame.pack(side=tk.BOTTOM, fill=tk.Y, pady=15)
+    plotterVariableBoxFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    plotterVariableNameFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    plotterPlotSelectFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    plotterVariableEntryFrame.pack(side=tk.BOTTOM, fill=tk.Y, pady=15, anchor='w')
+    plotterVariableSelectFrame.pack(side=tk.BOTTOM, fill=tk.Y, pady=15, anchor='w')
     plotterCanvasFrame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
     dataWindowHeaderFrame.pack(side=tk.TOP, fill=tk.BOTH)
@@ -604,14 +541,18 @@ def serial_monitor():
     plotterClearButton.pack(side=tk.LEFT, pady=2, padx=5)
 
     datSerialButton.pack(side=tk.LEFT)
-    datAllButton.pack(side=tk.LEFT)
+
+    plotButton.pack(side=tk.LEFT, padx=20)
+    #datAllButton.pack(side=tk.LEFT)
     
         #generalRadioButton.grid(row=0,column=0,sticky="w")
     
         #generalBox.grid(row=0,column=0,sticky="w")
     autoscrollBox.pack(side=tk.LEFT, pady=2, padx=5)
     timestampBox.pack(side=tk.RIGHT, pady=2, padx=5)
-    dataWindowBox.pack(side=tk.LEFT, pady=10, padx=20)
+    dataWindowBox.pack(side=tk.LEFT, pady=10, padx=20, anchor='nw')
+
+    plotterMenu.pack(pady=10)
 
     #---------------
 

@@ -40,7 +40,9 @@ double offRegValAve = 0;
 double gainRegVal[50];
 double gainRegValAve = 0;
 uint32_t meas[ele];// = {};
+byte flags[ele];
 unsigned long t[ele];// = {};
+char buffer[50];
 volatile bool collect = false;
 volatile bool paused = false;
 unsigned long ti;
@@ -83,8 +85,8 @@ byte GIA = 14;
 CS5532 adc1("Q1Z",cs,sdoFlag,osc);
 
 void setup() {
-  Serial.begin(115200);
-  //Serial.begin(250000);
+  //Serial.begin(115200);
+  Serial.begin(250000);
   while(!Serial){}
   delay(40);
 
@@ -153,7 +155,28 @@ void setup() {
   //binSpeed();
   
   startADC2();
-  //digitalWrite(cs,HIGH);
+  //calOff();
+  adc1.uploadOffset(Offset1, 3868397824);
+  //calGain();
+  adc1.uploadGain(Gain1, 48609312);
+  adc1.contMeas(Setup4);
+  for(int i=0;i<ele;++i){
+    meas[i]=0;
+    flags[i]=0;
+    t[i]=0;
+  }
+
+//  int d32[32] = {};
+//  uint32_t s = 0xA37E29D2;  // 1010 | 0011 | 0111 | 1110 | 0010 | 1001 | 1101 | 0010
+//  byte r = 0;
+//  Serial.print("\n");
+//  for(int i=0;i<32;++i){
+//    d32[i] = 1&(s >> i);
+//    Serial.print(d32[i]);
+//  }
+//  r = s & 7;
+//  Serial.print('\n');
+//  Serial.println(r);
 }
 
 void loop() {
@@ -167,6 +190,7 @@ void loop() {
   //livePlot();
   runBatch();
   //timeCal();
+  delay(50);
 }
 
 void startADC2(){
@@ -177,13 +201,6 @@ void startADC2(){
   delay(50);
   adc1.init();
   delay(20);
-  calOff();
-  calGain();
-  adc1.contMeas(Setup4);
-  for(int i=0;i<ele;++i){
-    meas[i]=0;
-    t[i]=0;
-  }
 }
 
 void startADC(){
@@ -327,9 +344,10 @@ void probe(int keep, int cut){
 }
 
 void runBatch(){
-  Serial.println("\n\n Run Batch:\n");
+  Serial.println("\n\n Run Batch:");
   while(!collect){}
-  Serial.println("\n Starting Collection...\n");  //put following under meas[i] line in for loop <meas[i] = adc1.quickScan();>
+  Serial.println("\n Starting Collection...\n#START");  //put following under meas[i] line in for loop <meas[i] = adc1.quickScan();>
+  Serial.println("t,F,flags");
   digitalWrite(led,HIGH);
   collect = false;
 //  ti = micros();
@@ -350,11 +368,21 @@ void runBatch(){
   collect = false;
   digitalWrite(led,LOW);
   for(int i=0;i<ele;++i){
-    Serial.print(meas[i]);
-    Serial.print("\t,\t");
-    Serial.println(t[i]);
-    delay(2);
+    flags[i] = meas[i]&7;
+    meas[i] = meas[i]>>8;
   }
+  for(int i=0;i<ele;++i){
+    //Serial.print(t[i]);
+    //Serial.print("\t,\t");
+    //Serial.print(meas[i]);
+    //Serial.print("\t,\t");
+    //Serial.println(flags[i]);
+    sprintf(buffer, "%lu,%lu,%d",t[i],meas[i],flags[i]);
+    Serial.println(buffer);
+    delay(8);
+  }
+  delay(50);
+  Serial.println("#END");
 }
 
 void livePlot(){
@@ -375,6 +403,9 @@ void livePlot(){
     //Serial.print(adc1.convReg.measDec);
     //Serial.print("\t,\t");
     //Serial.println(dt);
+  }
+  for(int i=0;i<ele;++i){
+    meas[i] = meas[i]>>8;
   }
   collect = false;
   digitalWrite(led,LOW);
@@ -491,6 +522,10 @@ void mux(){
   digitalWrite(a1,LOW);
   digitalWrite(a2,LOW);
   digitalWrite(a3,LOW);
+  a0_state = false;
+  a1_state = false;
+  a2_state = false;
+  a3_state = false;
 }
 
 void binSpeed(){

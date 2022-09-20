@@ -21,12 +21,12 @@
 	#define RSB_CSR     0x05
 	#define MC_SINGLE   0x80
 	#define MC_CONT     0xC0
-	#define SETUP1      0x80
-	#define SETUP2      0x88
-	#define SETUP3      0x90
-	#define SETUP4      0x98
-	#define SETUP5      0xA0
-	#define SETUP6      0xA8
+	#define SETUP1      0x80	//For Conversion
+	#define SETUP2      0x88	//   ||
+	#define SETUP3      0x90	//   ||
+	#define SETUP4      0x98	//  _||_
+	#define SETUP5      0xA0	//  \  /
+	#define SETUP6      0xA8	//   \/
 	#define SETUP7      0xB0
 	#define SETUP8      0xB8
 	#define CC_SELF_OC  0x81
