@@ -66,6 +66,8 @@ def serial_monitor():
     lines = tk.StringVar(master=window)
     indText = tk.StringVar(master=window, value=port+': No Connection')
     datID = tk.StringVar(master=window)
+    varID = tk.StringVar(master=window, value='Input Data: ( )')
+    plotID = tk.StringVar(master=window, value='y = f(x)')
     input1 = tk.StringVar(master=window)
     input2 = tk.StringVar(master=window)
     input3 = tk.StringVar(master=window)
@@ -81,6 +83,8 @@ def serial_monitor():
     datRead = tk.BooleanVar(master=window, value=False)
     datWrite = tk.BooleanVar(master=window, value=False)
     datReady = tk.BooleanVar(master=window, value=False)
+    varWin = tk.BooleanVar(master=window, value=True)
+    plotWin = tk.BooleanVar(master=window, value=True)
 
         #generalInt = tk.IntVar(master=window, value=0)
     auto = tk.IntVar(master=window, value=1)
@@ -123,11 +127,15 @@ def serial_monitor():
             
     def main():
         while True:
-            if status.get():
-                if not serial_port.inWaiting()==0:
-                    lines.set(serial_port.readline().decode())
-                    screenPrint(lines.get())
+            #if status.get():
+            #    if not serial_port.inWaiting()==0:
+            #        lines.set(serial_port.readline().decode())
+            #        screenPrint(lines.get())
             try:
+                if status.get():
+                    if not serial_port.inWaiting()==0:
+                        lines.set(serial_port.readline().decode())
+                        screenPrint(lines.get())
                 if(screen.yview()[1]-screen.yview()[0])<1.0:
                     textScroll.config(command = screen.yview)
                 if(dataScreen.yview()[1]-dataScreen.yview()[0])<1.0:
@@ -199,6 +207,9 @@ def serial_monitor():
             serFile.truncate(0)
             #serCSV.truncate(0)
             datAllButton.pack_forget()
+            plotWin.set(False)
+            plotWindowBox.pack_forget()
+            showPlot()
         elif "#END" in out:
             datAct.set(False)
             print("Data Collected")
@@ -217,14 +228,81 @@ def serial_monitor():
         monitorFrame.pack_forget()
         plotterFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
 
+    def plot():
+        print('Set Plot')
+        if par1.get()==input1.get():
+            y = v1
+        elif par1.get()==input2.get():
+            y = v2
+        elif par1.get()==input3.get():
+            y = v3
+        elif par1.get()==input4.get():
+            y = v4
+        elif par1.get()==input5.get():
+            y = v5
+
+        if par2.get()==input1.get():
+            x = v1
+        elif par2.get()==input2.get():
+            x = v2
+        elif par2.get()==input3.get():
+            x = v3
+        elif par2.get()==input4.get():
+            x = v4
+        elif par2.get()==input5.get():
+            x = v5
+            
+        if plotType.get()==0:
+            fig = Figure(dpi=96)
+            plot1 = fig.add_subplot(111)
+            plot1.plot(x,y)
+            canvas = FigureCanvasTkAgg(fig, master=plotterCanvasFrame)
+            canvas.draw()
+            plotWin.set(True)
+            plotWindowBox.pack(side=tk.TOP, pady=10, padx=20, anchor='nw')
+            showPlot()
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            
     def setPlot():
-        print('ayyyy imma plot was goin on')
+        if plotType.get()==0:
+            plotID.set('y = f(x)')
+        elif plotType.get()==1:
+            plotID.set('FFT')
+        elif plotType.get()==2:
+            plotID.set('Calibration Curve')
+
+    def addPlotButton(event):
+        if (not par1.get()=='') and (not par2.get()=='') and datReady.get():
+            plotButton.pack(side=tk.LEFT, padx=20)
+        else:
+            plotButton.pack_forget()
+
+    def addPlotButtonP():
+        if (not par1.get()=='') and (not par2.get()=='') and datReady.get():
+            plotButton.pack(side=tk.LEFT, padx=20)
+        else:
+            plotButton.pack_forget()
 
     def showData():
         if datWin.get():
             plotterDataWindowFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         else:
             plotterDataWindowFrame.pack_forget()
+
+    def showPlot():
+        if plotWin.get():
+            plotterCanvasFrame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+            if datWin.get():
+                plotterDataWindowFrame.pack_forget()
+                plotterDataWindowFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        else:
+            plotterCanvasFrame.pack_forget()
+
+    def showVar():
+        if varWin.get():
+            plotterVariableFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
+        else:
+            plotterVariableFrame.pack_forget()
 
     def datWinX():
         plotterDataWindowFrame.pack_forget()
@@ -254,9 +332,10 @@ def serial_monitor():
         serCSV.seek(0)
         data = serFile.readlines()
         datID.set(data[0].rstrip())
-        print(datID.get())
+        #print(datID.get())
+        varID.set('Input Data: ('+datID.get()+')')
         nPars.set(data[0].count(',')+1)
-        print(nPars.get())
+        #print(nPars.get())
         for line in data:
             serCSVWriter.writerow(line.rstrip().split(','))
         serFile.seek(0)
@@ -288,6 +367,7 @@ def serial_monitor():
         datReady.set(True)
         datAllButton.pack(side=tk.LEFT)
         addTab()
+        addPlotButtonP()
 
     def datPrint():
         #print('Screen Print')
@@ -350,16 +430,17 @@ def serial_monitor():
     plotterDisplayFrame             = tk.Frame(master=plotterFrame)
     plotterCanvasFrame              = tk.Frame(master=plotterDisplayFrame, relief=border, borderwidth=bw)
     plotterVariableFrame            = tk.Frame(master=plotterFrame, relief=border, borderwidth=bw)
-    plotterVariableNameFrame        = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
+    plotterVariableNameFrame        = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)
     plotterVariableEntryFrame       = tk.Frame(master=plotterVariableNameFrame)#, relief=border, borderwidth=bw)
     plotterVariableSelectFrame      = tk.Frame(master=plotterVariableNameFrame)#, relief=border, borderwidth=bw)
     plotterVariableBoxFrame         = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
-    plotterPlotSelectFrame          = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
+    plotterPlotSelectFrame          = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)
     plotterDataWindowFrame          = tk.Frame(master=plotterDisplayFrame, relief=border, borderwidth=bw)
 
     dataWindowHeaderFrame           = tk.Frame(master=plotterDataWindowFrame, relief=border, borderwidth=bw)
     dataWindowPrintFrame            = tk.Frame(master=plotterDataWindowFrame, relief=border, borderwidth=bw)
     dataWindowHeaderSelectFrame     = tk.Frame(master=dataWindowHeaderFrame)#, relief=border, borderwidth=bw)
+    dataWindowXButtonFrame          = tk.Frame(master=dataWindowHeaderFrame)
     
         #generalLabel = tk.Label(master=generalLabelFrame, text="General", bg=color, font=MEDFONT, relief=border)
     indicator               = tk.Label(master=uiIndicatorFrame, image=offInd)
@@ -368,11 +449,9 @@ def serial_monitor():
     plotterIndicator        = tk.Label(master=plotterUIIndicatorFrame, image=offInd)
     plotterIndicatorLabel   = tk.Label(master=plotterUIIndicatorLabelFrame, textvariable=indText, font=BUTTONFONT, width=18, anchor='w')
 
-    variableIDLabel         = tk.Label(master=plotterVariableEntryFrame, text='Input Data:', font=LARGEFONT)
-    variableSpacerLabel1    = tk.Label(master=plotterVariableEntryFrame, text=',', font=LARGEFONT)
-    variableSpacerLabel2    = tk.Label(master=plotterVariableEntryFrame, text=',', font=LARGEFONT)
-    variableSpacerLabel3    = tk.Label(master=plotterVariableEntryFrame, text=',', font=LARGEFONT)
-    variableSpacerLabel4    = tk.Label(master=plotterVariableEntryFrame, text=',', font=LARGEFONT)
+    variableIDLabel         = tk.Label(master=plotterVariableEntryFrame, textvariable=varID, font=LARGEFONT)
+    
+    plotTypeLabel           = tk.Label(master=plotterPlotSelectFrame, textvariable=plotID, font=LARGEFONT)
 
     variableSelectLabel     = tk.Label(master=plotterVariableSelectFrame, text='Plot Data:', font=LARGEFONT)
     variableSelectSpacer    = tk.Label(master=plotterVariableSelectFrame, text='vs', font=LARGEFONT)
@@ -386,11 +465,11 @@ def serial_monitor():
     dataWindowScroll        = tk.Scrollbar(master=dataWindowPrintFrame, orient=tk.VERTICAL)
 
         #generalEntry = tk.Entry(master=generalEntryFrame, textvariable=strvar1, command=readtext)
-    plotterEntry1           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input1, font=MEDFONT, width=5, bd=4)
-    plotterEntry2           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input2, font=MEDFONT, width=5, bd=4)
-    plotterEntry3           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input3, font=MEDFONT, width=5, bd=4)
-    plotterEntry4           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input4, font=MEDFONT, width=5, bd=4)
-    plotterEntry5           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input5, font=MEDFONT, width=5, bd=4)
+##    plotterEntry1           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input1, font=MEDFONT, width=5, bd=4)
+##    plotterEntry2           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input2, font=MEDFONT, width=5, bd=4)
+##    plotterEntry3           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input3, font=MEDFONT, width=5, bd=4)
+##    plotterEntry4           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input4, font=MEDFONT, width=5, bd=4)
+##    plotterEntry5           = tk.Entry(master=plotterVariableEntryFrame, textvariable=input5, font=MEDFONT, width=5, bd=4)
 ##    plotterEntry1.bind('<Any-KeyRelease>',addTab)
 ##    plotterEntry2.bind('<Any-KeyRelease>',addTab)
 ##    plotterEntry3.bind('<Any-KeyRelease>',addTab)
@@ -399,8 +478,8 @@ def serial_monitor():
 
     plotterSelect1          = tk.Entry(master=plotterVariableSelectFrame, textvariable=par1, font=MEDFONT, width=5, bd=4)
     plotterSelect2          = tk.Entry(master=plotterVariableSelectFrame, textvariable=par2, font=MEDFONT, width=5, bd=4)
-    plotterSelect1.bind('<Any-KeyRelease>',setPlot)
-    plotterSelect2.bind('<Any-KeyRelease>',setPlot)
+    plotterSelect1.bind('<Any-KeyRelease>',addPlotButton)
+    plotterSelect2.bind('<Any-KeyRelease>',addPlotButton)
 
         #generalText = tk.Text(master=generalTextFrame)
     screen = tk.Text(master=printFrame, font=BUTTONFONT, state=tk.NORMAL, height=64,
@@ -423,15 +502,15 @@ def serial_monitor():
     plotterConnectButton = tk.Button(master=plotterUIButtonFrame, text="Disconnect", font=BUTTONFONT, height=buh, width=buw,
                             image=pixel, pady=0, padx=0, compound="center", command=portConnect, fg='red')
 
-    datWinXButton = tk.Button(master=dataWindowHeaderFrame, text='X', command=datWinX, font=BUTTONFONT,
+    datWinXButton = tk.Button(master=dataWindowHeaderSelectFrame, text='X', command=datWinX, font=BUTTONFONT,
                               height=12, width=12, image=pixel, compound="center")
 
-    plotButton = tk.Button(master=plotterVariableSelectFrame, text='Plot', command=setPlot, font=LARGEFONT)
+    plotButton = tk.Button(master=plotterVariableSelectFrame, text='Plot', command=plot, font=LARGEFONT)
     
         #generalRadioButton = tk.Radiobutton(master=generalRadioButtonFrame, text="General", bg=color, font=MEDFONT, variable=bu1, value=0, activebackground=color)
     monitorButton = tk.Radiobutton(master=headerFrame, text="  Serial Monitor  ", font=MEDFONT, variable=page,
                                    value=0, pady=0, padx=0, command=monitor, indicatoron=0)
-    plotterButton = tk.Radiobutton(master=headerFrame, text="  Live Plotter  ", font=MEDFONT, variable=page,
+    plotterButton = tk.Radiobutton(master=headerFrame, text="  Serial Plotter  ", font=MEDFONT, variable=page,
                                    value=1, pady=0, padx=0, command=plotter, indicatoron=0)
 
     datSerialButton = tk.Radiobutton(master=dataWindowHeaderSelectFrame, text="Serial Monitor", font=BUTTONFONT, variable=datSel,
@@ -454,14 +533,18 @@ def serial_monitor():
     timestampBox = tk.Checkbutton(master=boxFrame, text="Show Timestamp", variable=ts)
     dataWindowBox = tk.Checkbutton(master=plotterVariableBoxFrame, text="Show Data Window", variable=datWin,
                                    command=showData)
+    plotWindowBox = tk.Checkbutton(master=plotterVariableBoxFrame, text="Show Plot", variable=plotWin,
+                                   command=showPlot)
+    variableWindowBox = tk.Checkbutton(master=plotterUIFrame, text="Show Variable Frame", variable=varWin,
+                                       command=showVar)
 
         #generalMenu = tk.OptionMenu(master...)
     plotterMenu = tk.Menubutton(master=plotterPlotSelectFrame, text="Plot Type", relief=tk.RAISED)
     plotterMenu.menu = tk.Menu(master=plotterMenu, tearoff=0)
     plotterMenu["menu"] = plotterMenu.menu
-    plotterMenu.menu.add_radiobutton(label="y = f(x)", variable=plotType, value=0)
-    plotterMenu.menu.add_radiobutton(label="FFT", variable=plotType, value=1)
-    plotterMenu.menu.add_radiobutton(label="Calibration Curve", variable=plotType, value=2)
+    plotterMenu.menu.add_radiobutton(label="y = f(x)", variable=plotType, value=0, command=setPlot)
+    plotterMenu.menu.add_radiobutton(label="FFT", variable=plotType, value=1, command=setPlot)
+    plotterMenu.menu.add_radiobutton(label="Calibration Curve", variable=plotType, value=2, command=setPlot)
     
         
     #---------------Page Formatting
@@ -483,16 +566,17 @@ def serial_monitor():
     plotterUIIndicatorLabelFrame.pack(side=tk.RIGHT, fill=tk.BOTH)
     plotterDisplayFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
     plotterVariableFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
-    plotterVariableBoxFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    plotterVariableNameFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-    plotterPlotSelectFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    plotterVariableBoxFrame.pack(side=tk.LEFT, fill=tk.BOTH)#, expand=True)
+    plotterVariableNameFrame.pack(side=tk.LEFT, fill=tk.BOTH)#, expand=True)
+    plotterPlotSelectFrame.pack(side=tk.RIGHT, fill=tk.BOTH)#, expand=True)
     plotterVariableEntryFrame.pack(side=tk.BOTTOM, fill=tk.Y, pady=15, anchor='w')
-    plotterVariableSelectFrame.pack(side=tk.BOTTOM, fill=tk.Y, pady=15, anchor='w')
-    plotterCanvasFrame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+    plotterVariableSelectFrame.pack(side=tk.BOTTOM, fill=tk.Y, anchor='w', pady=15)
+    #plotterCanvasFrame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-    dataWindowHeaderFrame.pack(side=tk.TOP, fill=tk.BOTH)
+    dataWindowHeaderFrame.pack(side=tk.TOP, fill=tk.X)#, expand=True)
     dataWindowPrintFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
     dataWindowHeaderSelectFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    #dataWindowXButtonFrame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         #generalLabel.pack(fill=tk.BOTH, padx=10, side=tk.LEFT, expand=True, pady=15)
     indicatorLabel.pack(side=tk.RIGHT)
@@ -502,17 +586,19 @@ def serial_monitor():
     plotterIndicator.pack(side=tk.LEFT)
 
     variableIDLabel.pack(side=tk.LEFT, padx=10)
-    plotterEntry1.pack(side=tk.LEFT)
-    variableSpacerLabel1.pack(side=tk.LEFT)
-    plotterEntry2.pack(side=tk.LEFT)
-    variableSpacerLabel2.pack(side=tk.LEFT)
-    plotterEntry3.pack(side=tk.LEFT)
-    variableSpacerLabel3.pack(side=tk.LEFT)
-    plotterEntry4.pack(side=tk.LEFT)
-    variableSpacerLabel4.pack(side=tk.LEFT)
-    plotterEntry5.pack(side=tk.LEFT)
 
-    variableSelectLabel.pack(side=tk.LEFT, padx=10)
+    plotTypeLabel.pack(side=tk.TOP, pady=10)
+##    plotterEntry1.pack(side=tk.LEFT)
+##    variableSpacerLabel1.pack(side=tk.LEFT)
+##    plotterEntry2.pack(side=tk.LEFT)
+##    variableSpacerLabel2.pack(side=tk.LEFT)
+##    plotterEntry3.pack(side=tk.LEFT)
+##    variableSpacerLabel3.pack(side=tk.LEFT)
+##    plotterEntry4.pack(side=tk.LEFT)
+##    variableSpacerLabel4.pack(side=tk.LEFT)
+##    plotterEntry5.pack(side=tk.LEFT)
+
+    variableSelectLabel.pack(side=tk.LEFT, padx=10, pady=10)
     plotterSelect1.pack(side=tk.LEFT)
     variableSelectSpacer.pack(side=tk.LEFT)
     plotterSelect2.pack(side=tk.LEFT)
@@ -522,7 +608,7 @@ def serial_monitor():
     dataWindowScroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         #outputCanvas.pack(fill=tk.BOTH, expand=True)
-    plotterCanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    #plotterCanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     screen.pack(side=tk.LEFT,fill=tk.BOTH,expand=True)
     dataScreen.pack(side=tk.LEFT,fill=tk.BOTH,expand=True)
 
@@ -530,7 +616,7 @@ def serial_monitor():
     monitorButton.pack(side=tk.LEFT, pady=5, padx=10)
     plotterButton.pack(side=tk.LEFT, pady=5)
 
-    datWinXButton.pack(side=tk.RIGHT, anchor='ne')
+    datWinXButton.pack(side=tk.RIGHT, anchor='ne',padx=1)#, expand=True)
     
     connectButton.pack(side=tk.LEFT, pady=2, padx=5)
     resetButton.pack(side=tk.LEFT, pady=2, padx=5)
@@ -542,7 +628,6 @@ def serial_monitor():
 
     datSerialButton.pack(side=tk.LEFT)
 
-    plotButton.pack(side=tk.LEFT, padx=20)
     #datAllButton.pack(side=tk.LEFT)
     
         #generalRadioButton.grid(row=0,column=0,sticky="w")
@@ -550,9 +635,10 @@ def serial_monitor():
         #generalBox.grid(row=0,column=0,sticky="w")
     autoscrollBox.pack(side=tk.LEFT, pady=2, padx=5)
     timestampBox.pack(side=tk.RIGHT, pady=2, padx=5)
-    dataWindowBox.pack(side=tk.LEFT, pady=10, padx=20, anchor='nw')
+    dataWindowBox.pack(side=tk.TOP, pady=10, padx=20, anchor='nw')
+    variableWindowBox.pack(side=tk.LEFT, anchor='w',pady=2, padx=5)
 
-    plotterMenu.pack(pady=10)
+    plotterMenu.pack(pady=10,padx=110)
 
     #---------------
 
