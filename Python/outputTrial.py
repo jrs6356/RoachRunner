@@ -95,7 +95,7 @@ def serial_monitor():
     datSel = tk.IntVar(master=window, value=6)
     index = tk.IntVar(master=window, value=0)
     nPars = tk.IntVar(master=window, value=0)
-    plotType = tk.IntVar(master=window, value=0)
+    plotType = tk.IntVar(master=window, value=2)
 
         #generalDouble = tk.DoubleVar(master=window, value=0.0)
     y0 = tk.DoubleVar(master=window, value=0.0)
@@ -127,15 +127,15 @@ def serial_monitor():
             
     def main():
         while True:
-            #if status.get():
-            #    if not serial_port.inWaiting()==0:
-            #        lines.set(serial_port.readline().decode())
-            #        screenPrint(lines.get())
+            if status.get():
+                if not serial_port.inWaiting()==0:
+                    lines.set(serial_port.readline().decode())
+                    screenPrint(lines.get())
             try:
-                if status.get():
-                    if not serial_port.inWaiting()==0:
-                        lines.set(serial_port.readline().decode())
-                        screenPrint(lines.get())
+                #if status.get():
+                #    if not serial_port.inWaiting()==0:
+                #        lines.set(serial_port.readline().decode())
+                #        screenPrint(lines.get())
                 if(screen.yview()[1]-screen.yview()[0])<1.0:
                     textScroll.config(command = screen.yview)
                 if(dataScreen.yview()[1]-dataScreen.yview()[0])<1.0:
@@ -204,6 +204,7 @@ def serial_monitor():
             datAct.set(True)
             datRead.set(False)
             index.set(0)
+            serFile.seek(0)
             serFile.truncate(0)
             #serCSV.truncate(0)
             datAllButton.pack_forget()
@@ -227,32 +228,34 @@ def serial_monitor():
         print('Plotter')
         monitorFrame.pack_forget()
         plotterFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+        setPlot()
 
     def plot():
         print('Set Plot')
-        if par1.get()==input1.get():
-            y = v1
-        elif par1.get()==input2.get():
-            y = v2
-        elif par1.get()==input3.get():
-            y = v3
-        elif par1.get()==input4.get():
-            y = v4
-        elif par1.get()==input5.get():
-            y = v5
-
-        if par2.get()==input1.get():
-            x = v1
-        elif par2.get()==input2.get():
-            x = v2
-        elif par2.get()==input3.get():
-            x = v3
-        elif par2.get()==input4.get():
-            x = v4
-        elif par2.get()==input5.get():
-            x = v5
             
         if plotType.get()==0:
+            print('y = f(x)')
+            if par1.get()==input1.get():
+                y = v1
+            elif par1.get()==input2.get():
+                y = v2
+            elif par1.get()==input3.get():
+                y = v3
+            elif par1.get()==input4.get():
+                y = v4
+            elif par1.get()==input5.get():
+                y = v5
+
+            if par2.get()==input1.get():
+                x = v1
+            elif par2.get()==input2.get():
+                x = v2
+            elif par2.get()==input3.get():
+                x = v3
+            elif par2.get()==input4.get():
+                x = v4
+            elif par2.get()==input5.get():
+                x = v5
             fig = Figure(dpi=96)
             plot1 = fig.add_subplot(111)
             plot1.plot(x,y)
@@ -262,14 +265,36 @@ def serial_monitor():
             plotWindowBox.pack(side=tk.TOP, pady=10, padx=20, anchor='nw')
             showPlot()
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        elif plotType.get()==1:
+            print('Live Plot')
+            print('Not yet available')
+
+        elif plotType.get()==2:
+            print('Calibration Curve')
+            
             
     def setPlot():
         if plotType.get()==0:
             plotID.set('y = f(x)')
+            plotterSelect1.pack(side=tk.LEFT)
+            variableSelectSpacer.pack(side=tk.LEFT)
+            plotterSelect2.pack(side=tk.LEFT)
         elif plotType.get()==1:
-            plotID.set('FFT')
+            plotID.set('Live Plot')
+            plotterSelect1.pack(side=tk.LEFT)
+            variableSelectSpacer.pack(side=tk.LEFT)
+            plotterSelect2.pack(side=tk.LEFT)
         elif plotType.get()==2:
             plotID.set('Calibration Curve')
+            plotterSelect1.pack_forget()
+            variableSelectSpacer.pack_forget()
+            plotterSelect2.pack_forget()
+        elif plotType.get()==3:
+            plotID.set('FFT')
+            plotterSelect1.pack(side=tk.LEFT)
+            variableSelectSpacer.pack(side=tk.LEFT)
+            plotterSelect2.pack(side=tk.LEFT)
 
     def addPlotButton(event):
         if (not par1.get()=='') and (not par2.get()=='') and datReady.get():
@@ -331,43 +356,66 @@ def serial_monitor():
         serFile.seek(0)
         serCSV.seek(0)
         data = serFile.readlines()
-        datID.set(data[0].rstrip())
-        #print(datID.get())
-        varID.set('Input Data: ('+datID.get()+')')
-        nPars.set(data[0].count(',')+1)
-        #print(nPars.get())
-        for line in data:
-            serCSVWriter.writerow(line.rstrip().split(','))
-        serFile.seek(0)
-        serCSV.seek(0)
-        df = pd.read_csv('SerialData.csv')
-        for col in df:
-            if input1.get()=='':
-                input1.set(col)
-            elif input2.get()=='':
-                input2.set(col)
-            elif input3.get()=='':
-                input3.set(col)
-            elif input4.get()=='':
-                input4.set(col)
-            elif input5.get()=='':
-                input5.set(col)
-        
-        if not input1.get()=='':
-            v1[:] = df[input1.get()]
-        if not input2.get()=='':
-            v2[:] = df[input2.get()]
-        if not input3.get()=='':
-            v3[:] = df[input3.get()]
-        if not input4.get()=='':
-            v4[:] = df[input4.get()]
-        if not input5.get()=='':
-            v5[:] = df[input5.get()]
-        serFile.seek(0)
-        datReady.set(True)
-        datAllButton.pack(side=tk.LEFT)
-        addTab()
-        addPlotButtonP()
+        i = 0
+        if plotType.get()==2:
+            print("Logging Element")
+            try:
+                df = pd.read_csv('SerialData.csv')
+            except:
+                df = pd.DataFrame()
+            dat = data[1:]
+            ele = data[0]
+            head = '0'
+            if int(ele) > 0:
+                for i in range(1,int(ele)+1):
+                    head = head + ',' + str(i)
+            print(head)
+            head = head.split(',')
+            print(head)
+            df[ele] = dat
+            df.to_csv('SerialData.csv',index=False,header=head)
+##            r = csv.reader(serCSV)
+##            for row in r:
+##                row.append(data[i])
+##                i=i+1
+        else:
+            datID.set(data[0].rstrip())
+            #print(datID.get())
+            varID.set('Input Data: ('+datID.get()+')')
+            nPars.set(data[0].count(',')+1)
+            #print(nPars.get())
+            for line in data:
+                serCSVWriter.writerow(line.rstrip().split(','))
+            serFile.seek(0)
+            serCSV.seek(0)
+            df = pd.read_csv('SerialData.csv')
+            for col in df:
+                if input1.get()=='':
+                    input1.set(col)
+                elif input2.get()=='':
+                    input2.set(col)
+                elif input3.get()=='':
+                    input3.set(col)
+                elif input4.get()=='':
+                    input4.set(col)
+                elif input5.get()=='':
+                    input5.set(col)
+            
+            if not input1.get()=='':
+                v1[:] = df[input1.get()]
+            if not input2.get()=='':
+                v2[:] = df[input2.get()]
+            if not input3.get()=='':
+                v3[:] = df[input3.get()]
+            if not input4.get()=='':
+                v4[:] = df[input4.get()]
+            if not input5.get()=='':
+                v5[:] = df[input5.get()]
+            serFile.seek(0)
+            datReady.set(True)
+            datAllButton.pack(side=tk.LEFT)
+            addTab()
+            addPlotButtonP()
 
     def datPrint():
         #print('Screen Print')
@@ -543,9 +591,9 @@ def serial_monitor():
     plotterMenu.menu = tk.Menu(master=plotterMenu, tearoff=0)
     plotterMenu["menu"] = plotterMenu.menu
     plotterMenu.menu.add_radiobutton(label="y = f(x)", variable=plotType, value=0, command=setPlot)
-    plotterMenu.menu.add_radiobutton(label="FFT", variable=plotType, value=1, command=setPlot)
+    plotterMenu.menu.add_radiobutton(label="Live Plot", variable=plotType, value=1, command=setPlot)
     plotterMenu.menu.add_radiobutton(label="Calibration Curve", variable=plotType, value=2, command=setPlot)
-    
+    plotterMenu.menu.add_radiobutton(label="FFT", variable=plotType, value=3, command=setPlot)
         
     #---------------Page Formatting
 
@@ -599,9 +647,9 @@ def serial_monitor():
 ##    plotterEntry5.pack(side=tk.LEFT)
 
     variableSelectLabel.pack(side=tk.LEFT, padx=10, pady=10)
-    plotterSelect1.pack(side=tk.LEFT)
-    variableSelectSpacer.pack(side=tk.LEFT)
-    plotterSelect2.pack(side=tk.LEFT)
+##    plotterSelect1.pack(side=tk.LEFT)
+##    variableSelectSpacer.pack(side=tk.LEFT)
+##    plotterSelect2.pack(side=tk.LEFT)
 
         #generalScroll.pack()
     textScroll.pack(side=tk.RIGHT, fill=tk.Y)

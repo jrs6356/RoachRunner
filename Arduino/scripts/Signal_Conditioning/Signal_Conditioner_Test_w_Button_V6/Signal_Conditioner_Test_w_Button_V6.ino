@@ -28,7 +28,7 @@ int k = 0;
 int m = 0;
 int n = 0;
 int N = 51;
-const int ele = 3000;
+const int ele = 1000;
 double offset = 0;
 double t1 = 0;
 double t2 = 0;
@@ -156,27 +156,18 @@ void setup() {
   
   startADC2();
   //calOff();
-  adc1.uploadOffset(Offset1, 3868397824);
+  //      adc1.uploadOffset(Offset1, 3868397824);
+  adc1.uploadOffset(Offset1, 3908051546);
   //calGain();
-  adc1.uploadGain(Gain1, 48609312);
-  adc1.contMeas(Setup4);
+  //      adc1.uploadGain(Gain1, 48609312);
+  adc1.uploadGain(Gain1, 25633999);
+  adc1.contMeas(Setup2);
   for(int i=0;i<ele;++i){
     meas[i]=0;
     flags[i]=0;
     t[i]=0;
   }
-
-//  int d32[32] = {};
-//  uint32_t s = 0xA37E29D2;  // 1010 | 0011 | 0111 | 1110 | 0010 | 1001 | 1101 | 0010
-//  byte r = 0;
-//  Serial.print("\n");
-//  for(int i=0;i<32;++i){
-//    d32[i] = 1&(s >> i);
-//    Serial.print(d32[i]);
-//  }
-//  r = s & 7;
-//  Serial.print('\n');
-//  Serial.println(r);
+  //calStrain();
 }
 
 void loop() {
@@ -188,7 +179,8 @@ void loop() {
   //while(1){}
   //handMUX();
   //livePlot();
-  runBatch();
+  //runBatch();
+  calStrain();
   //timeCal();
   delay(50);
 }
@@ -263,55 +255,63 @@ void startADC(){
 }
 
 void calOff(){
-  Serial.println("\n\nRemove Mass Basket from beam");
+  Serial.println("\n\nHang empty Mass Basket from beam");
   while(!collect){}
   collect = false;
   Serial.println("\nReady to calibrate Offset...");
   while(!collect){}
   digitalWrite(led, HIGH);
   delay(50);
-  for(int i=0;i<2;++i){
-    adc1.sysOffCal(Setup3);
-    offRegVal[i] = adc1.offsetReg1.offset;
+  for(int i=0;i<10;++i){
+    adc1.sysOffCal(Setup1);
+    offRegVal[i] = adc1.offsetReg1.out;
     //print32(adc1.offsetReg1.out);
   }
   delay(50);
   digitalWrite(led, LOW);
   collect = false;
-  for(int i=0;i<2;++i){
-    Serial.print("\n");Serial.print(i);Serial.print(":\t");
-    sciNote(offRegVal[i],6);
+  Serial.print('\n');
+  for(int i=0;i<10;++i){
+    //Serial.print("\n");
+    Serial.print(i);Serial.print(":\t");
+    //sciNote(offRegVal[i],6);
+    Serial.println(offRegVal[i]);
     offRegValAve = offRegValAve + offRegVal[i];
   }
-  offRegValAve = offRegValAve / 2.0;
+  offRegValAve = offRegValAve / 10.0;
   Serial.print("\n\nAverage Offset:\t");
-  sciNote(offRegValAve,6);
+  Serial.println(offRegValAve);
+  //sciNote(offRegValAve,6);
 }
 
 void calGain(){
-  Serial.println("\n\nHang Mass Basket from beam");
+  Serial.println("\n\nHang 200g from beam");
   while(!collect){}
   collect = false;
   Serial.println("\nReady to calibrate Gain...");
   while(!collect){}
   digitalWrite(led, HIGH);
   delay(50);
-  for(int i=0;i<2;++i){
-    adc1.sysGainCal(Setup3);
-    gainRegVal[i] = adc1.gainReg1.gain;
+  for(int i=0;i<10;++i){
+    adc1.sysGainCal(Setup1);
+    gainRegVal[i] = adc1.gainReg1.out;
     //print32(adc1.offsetReg1.out);
   }
   delay(50);
   digitalWrite(led, LOW);
   collect = false;
-  for(int i=0;i<2;++i){
-    Serial.print("\n");Serial.print(i);Serial.print(":\t");
-    sciNote(gainRegVal[i],6);
+  Serial.print('\n');
+  for(int i=0;i<10;++i){
+    //Serial.print("\n");
+    Serial.print(i);Serial.print(":\t");
+    //sciNote(gainRegVal[i],6);
+    Serial.println(gainRegVal[i]);
     gainRegValAve = gainRegValAve + gainRegVal[i];
   }
-  gainRegValAve = gainRegValAve / 2.0;
+  gainRegValAve = gainRegValAve / 10.0;
   Serial.print("\n\nAverage Gain:\t");
-  sciNote(gainRegValAve,6);
+  //sciNote(gainRegValAve,6);
+  Serial.println(gainRegValAve);
 }
 
 void probe(int keep, int cut){
@@ -341,6 +341,39 @@ void probe(int keep, int cut){
   Serial.print(1000.0*measAve*adc1.convReg.LSB);
   Serial.println(" mV");
   collect = false;
+}
+
+void calStrain(){
+  Serial.println("\nGenerate Signal Conditioner Calibration Curve");
+  for(int i=0;i<40;++i){
+    Serial.print("Element ");Serial.println(i);
+    collect = false;
+    e_state = false;
+    while(!(collect||e_state)){}
+    if(collect){
+      digitalWrite(led, HIGH);
+      Serial.println("#START");
+      Serial.println(i);
+      for(int j=0;j<ele;++j){
+        meas[j] = adc1.quickScan();
+      }
+      for(int j=0;j<ele;++j){
+        //Serial.print(meas[j]);
+        //Serial.print("\t,\t");
+        //Serial.print(meas[j]>>8);
+        //Serial.print("\t,\t");
+        Serial.println(-((meas[j]>>31)*pow(2,24))+(meas[j]>>8));
+        delay(5);
+      }
+      Serial.println("#END");
+      digitalWrite(led,LOW);
+    }
+    else{
+      if(i>0){
+        --i;
+      }
+    }
+  }
 }
 
 void runBatch(){

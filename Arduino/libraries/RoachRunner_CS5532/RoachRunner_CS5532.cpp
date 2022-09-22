@@ -691,40 +691,37 @@ void GainReg::merge(){
 
 void GainReg::parse(){
 	read32(out);
-	uint32_t _Gs[30];
-	for(int i=0;i<30;++i){
-		_Gs[i] = d32[i+2]<<(29-i);
-	}
-	g5p = _Gs[0];
-	g4p = _Gs[1];
-	g3p = _Gs[2];
-	g2p = _Gs[3];
-	g1p = _Gs[4];
-	g0 = _Gs[5];
-	g1 = _Gs[6];
-	g2 = _Gs[7];
-	g3 = _Gs[8];
-	g4 = _Gs[9];
-	g5 = _Gs[10];
-	g6 = _Gs[11];
-	g7 = _Gs[12];
-	g8 = _Gs[13];
-	g9 = _Gs[14];
-	g10 = _Gs[15];
-	g11 = _Gs[16];
-	g12 = _Gs[17];
-	g13 = _Gs[18];
-	g14 = _Gs[19];
-	g15 = _Gs[20];
-	g16 = _Gs[21];
-	g17 = _Gs[22];
-	g18 = _Gs[23];
-	g19 = _Gs[24];
-	g20 = _Gs[25];
-	g21 = _Gs[26];
-	g22 = _Gs[27];
-	g23 = _Gs[28];
-	g24 = _Gs[29];
+	int i = 29;
+	g5p = d32[i--];
+	g4p = d32[i--];
+	g3p = d32[i--];
+	g2p = d32[i--];
+	g1p = d32[i--];
+	g0 = d32[i--];
+	g1 = d32[i--];
+	g2 = d32[i--];
+	g3 = d32[i--];
+	g4 = d32[i--];
+	g5 = d32[i--];
+	g6 = d32[i--];
+	g7 = d32[i--];
+	g8 = d32[i--];
+	g9 = d32[i--];
+	g10 = d32[i--];
+	g11 = d32[i--];
+	g12 = d32[i--];
+	g13 = d32[i--];
+	g14 = d32[i--];
+	g15 = d32[i--];
+	g16 = d32[i--];
+	g17 = d32[i--];
+	g18 = d32[i--];
+	g19 = d32[i--];
+	g20 = d32[i--];
+	g21 = d32[i--];
+	g22 = d32[i--];
+	g23 = d32[i--];
+	g24 = d32[i--];
 }
 
 void GainReg::reset(){
@@ -734,13 +731,7 @@ void GainReg::reset(){
 
 void GainReg::read32(uint32_t _a){
 	for(int i=0;i<32;++i){
-		d32[i] = 0;
-	}
-	for(int i=0;i<32;++i){
-		if(_a>=pow(2,31-i)){
-			d32[i] = 1;
-			_a = _a - pow(2,31-i);
-		}
+		d32[i] = (_a>>i)&1;
 	}
 }
 
@@ -1015,34 +1006,31 @@ void OffsetReg::merge(){
 
 void OffsetReg::parse(){
 	read32(out);
-	uint32_t _Os[24];
-	for(int i=0;i<24;++i){
-		_Os[i] = d32[i]<<(31-i);
-	}
-	o1 = _Os[0];
-	o2 = _Os[1];
-	o3 = _Os[2];
-	o4 = _Os[3];
-	o5 = _Os[4];
-	o6 = _Os[5];
-	o7 = _Os[6];
-	o8 = _Os[7];
-	o9 = _Os[8];
-	o10 = _Os[9];
-	o11 = _Os[10];
-	o12 = _Os[11];
-	o13 = _Os[12];
-	o14 = _Os[13];
-	o15 = _Os[14];
-	o16 = _Os[15];
-	o17 = _Os[16];
-	o18 = _Os[17];
-	o19 = _Os[18];
-	o20 = _Os[19];
-	o21 = _Os[20];
-	o22 = _Os[21];
-	o23 = _Os[22];
-	o24 = _Os[23];
+	int i = 31;
+	o1 = d32[i--];
+	o2 = d32[i--];
+	o3 = d32[i--];
+	o4 = d32[i--];
+	o5 = d32[i--];
+	o6 = d32[i--];
+	o7 = d32[i--];
+	o8 = d32[i--];
+	o9 = d32[i--];
+	o10 = d32[i--];
+	o11 = d32[i--];
+	o12 = d32[i--];
+	o13 = d32[i--];
+	o14 = d32[i--];
+	o15 = d32[i--];
+	o16 = d32[i--];
+	o17 = d32[i--];
+	o18 = d32[i--];
+	o19 = d32[i--];
+	o20 = d32[i--];
+	o21 = d32[i--];
+	o22 = d32[i--];
+	o23 = d32[i--];
+	o24 = d32[i--];
 }
 
 void OffsetReg::reset(){
@@ -1052,13 +1040,7 @@ void OffsetReg::reset(){
 
 void OffsetReg::read32(uint32_t _a){
 	for(int i=0;i<32;++i){
-		d32[i] = 0;
-	}
-	for(int i=0;i<32;++i){
-		if(_a>=pow(2,31-i)){
-			d32[i] = 1;
-			_a = _a - pow(2,31-i);
-		}
+		d32[i] = (_a>>i)&1;
 	}
 }
 
@@ -2056,6 +2038,7 @@ void CS5532::uploadOffset(reg r, uint32_t o){
 	switch(r){
 		case Offset1:
 			offsetReg1.out = o;
+			Serial.println(offsetReg1.out);
 			offsetReg1.parse();
 			break;
 		case Offset2:
@@ -2115,6 +2098,7 @@ void CS5532::uploadGain(reg r, uint32_t g){
 	switch(r){
 		case Gain1:
 			gainReg1.out = g;
+			Serial.println(gainReg1.out);
 			gainReg1.parse();
 			break;
 		case Gain2:
@@ -3015,28 +2999,28 @@ void CS5532::writeReg(reg r){
 		case(Gain1):
 			comA.CS = CH1;
 			comA.RSB = RSB_GAIN;
-			gainReg1.merge();
+			//gainReg1.merge();
 			out = gainReg1.out;
 			whole = true;
 			break;
 		case(Gain2):
 			comA.CS = CH2;
 			comA.RSB = RSB_GAIN;
-			gainReg2.merge();
+			//gainReg2.merge();
 			out = gainReg2.out;
 			whole = true;
 			break;
 		case(Offset1):
 			comA.CS = CH1;
 			comA.RSB = RSB_OFFSET;
-			offsetReg1.merge();
+			//offsetReg1.merge();
 			out = offsetReg1.out;
 			whole = true;
 			break;
 		case(Offset2):
 			comA.CS = CH2;
 			comA.RSB = RSB_OFFSET;
-			offsetReg2.merge();
+			//offsetReg2.merge();
 			out = offsetReg2.out;
 			whole = true;
 			break;
