@@ -1591,7 +1591,7 @@ void CS5532::CSRinit(){
 	setup1.WR = WR7_5;
 	setup2.WR = WR120;
 	setup3.WR = WR240;
-	setup4.WR = WR960;
+	setup4.WR = WR3840;
 	//setup5.WR = WR7_5;
 	//setup6.WR = WR7_5;
 	//setup7.WR = WR120;

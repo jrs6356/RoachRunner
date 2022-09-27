@@ -156,12 +156,14 @@ void setup() {
   
   startADC2();
   //calOff();
-  //      adc1.uploadOffset(Offset1, 3868397824);
-  adc1.uploadOffset(Offset1, 3908051546);
+  //        adc1.uploadOffset(Offset1, 3868397824);
+  //  adc1.uploadOffset(Offset1, 3908051546);
+  adc1.uploadOffset(Offset1, 3906343680);
   //calGain();
-  //      adc1.uploadGain(Gain1, 48609312);
-  adc1.uploadGain(Gain1, 25633999);
-  adc1.contMeas(Setup2);
+  //        adc1.uploadGain(Gain1, 48609312);
+  //  adc1.uploadGain(Gain1, 25633999);
+  adc1.uploadGain(Gain1, 25326871);
+  adc1.contMeas(Setup4);
   for(int i=0;i<ele;++i){
     meas[i]=0;
     flags[i]=0;
@@ -263,7 +265,7 @@ void calOff(){
   digitalWrite(led, HIGH);
   delay(50);
   for(int i=0;i<10;++i){
-    adc1.sysOffCal(Setup1);
+    adc1.sysOffCal(Setup3);
     offRegVal[i] = adc1.offsetReg1.out;
     //print32(adc1.offsetReg1.out);
   }
@@ -293,7 +295,7 @@ void calGain(){
   digitalWrite(led, HIGH);
   delay(50);
   for(int i=0;i<10;++i){
-    adc1.sysGainCal(Setup1);
+    adc1.sysGainCal(Setup3);
     gainRegVal[i] = adc1.gainReg1.out;
     //print32(adc1.offsetReg1.out);
   }
@@ -370,7 +372,10 @@ void calStrain(){
     }
     else{
       if(i>0){
-        --i;
+        i=i-2;
+        digitalWrite(pauseLED, HIGH);
+        delay(100);
+        digitalWrite(pauseLED, LOW);
       }
     }
   }
