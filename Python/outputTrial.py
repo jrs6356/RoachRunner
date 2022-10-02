@@ -67,11 +67,18 @@ def serial_monitor():
     v3 = []
     v4 = []
     v5 = []
+    v6 = []
+    v7 = []
+    v8 = []
+    v9 = []
+    v10 = []
+    global v
+    v = [v1,v2,v3,v4,v5,v6,v7,v8,v9,v10]
 
     #-----Beam-----
     g = 9.81
     b = 0.0153
-    h = 0.0007
+    h = 0.00065
     c = h/2.0
     xf = 0.0448
     xs = 0.00275
@@ -81,15 +88,15 @@ def serial_monitor():
     Rnom = 350.0
     Vs = 5.0
     S = 1.9
-    Gia = 100.0
+    Gia = 10.0
     #-----ADC-----
     Gadc = 32.0
     A = 2.0
     Vref = 5.0
     N = 24.0
     Kbi = 2.0
-    RgD = 25326871
-    RoD = 3906343680
+    RgD = 24527489#25326871
+    RoD = 3912222208#3906343680
 
     global Vfs
     Vfs = 0.0
@@ -120,12 +127,13 @@ def serial_monitor():
     VainSet = [None]*len(massSet)
     DadcSet = [None]*len(massSet)
     DadcRatSet = [None]*len(massSet)
+    testSet = [None]*len(massSet)
     for i in range(0,len(massSet)):
         forceSet[i] = massSet[i]*g/1000.0
         momentSet[i] = forceSet[i]*(xf-xs)
-        stressSet[i] = momentSet[i]*c/Ix
-        strainSet[i] = stressSet[i]/E
-        VwsbSet[i] = (1.0/2.0)*strainSet[i]*S*Vs
+        stressSet[i] = momentSet[i]*c/(Ix*pow(10,6))
+        strainSet[i] = pow(10,12)*stressSet[i]/E
+        VwsbSet[i] = pow(10,-3)*strainSet[i]*S*Vs/2.0
         VainSet[i] = VwsbSet[i]*Gia
 
     #---------------Page Variables---------------------------------------------------------------------------
@@ -143,10 +151,15 @@ def serial_monitor():
     input3 = tk.StringVar(master=window)
     input4 = tk.StringVar(master=window)
     input5 = tk.StringVar(master=window)
+    input6 = tk.StringVar(master=window)
+    input7 = tk.StringVar(master=window)
+    input8 = tk.StringVar(master=window)
+    input9 = tk.StringVar(master=window)
+    input10 = tk.StringVar(master=window)
     par1 = tk.StringVar(master=window)
     par2 = tk.StringVar(master=window)
-    horizDatID = tk.StringVar(master=window, value='X Config')
-    vertDatID = tk.StringVar(master=window, value='Y Config')
+    horizDatID = tk.StringVar(master=window, value='X Config - Stimulus')
+    vertDatID = tk.StringVar(master=window, value='Y Config - ADC Output')
     xScalarS = tk.StringVar(master=window, value='1.0')
     yScalarS = tk.StringVar(master=window, value='1.0')
     yOffsetS = tk.StringVar(master=window, value='0.0')
@@ -171,6 +184,7 @@ def serial_monitor():
     trendAct = tk.BooleanVar(master=window, value=True)
     legAct = tk.BooleanVar(master=window, value=True)
     realAct = tk.BooleanVar(master=window, value=False)
+    zeroAct = tk.BooleanVar(master=window, value=False)
     invPlot = tk.BooleanVar(master=window, value=False)
     xTypeA = tk.BooleanVar(master=window, value=True)
     yTypeA = tk.BooleanVar(master=window, value=False)
@@ -181,15 +195,17 @@ def serial_monitor():
     datRead = tk.IntVar(master=window, value=0)
     rst = tk.IntVar(master=window, value=0)
     page = tk.IntVar(master=window, value=1)
-    datSel = tk.IntVar(master=window, value=6)
+    datSel = tk.IntVar(master=window, value=0)
     index = tk.IntVar(master=window, value=0)
     nPars = tk.IntVar(master=window, value=0)
     nSamp = tk.IntVar(master=window, value=0)
     module = tk.IntVar(master=window, value=0)
     calPlotType = tk.IntVar(master=window, value=0)
+    xRealType = tk.IntVar(master=window, value=1)
+    yRealType = tk.IntVar(master=window, value=8)
     xType = tk.IntVar(master=window, value=0)
     yType = tk.IntVar(master=window, value=0)
-    yTypeB = tk.IntVar(master=window, value=0)
+    yTypeB = tk.IntVar(master=window, value=1)
 
         #generalDouble = tk.DoubleVar(master=window, value=0.0)
     y0 = tk.DoubleVar(master=window, value=0.0)
@@ -297,7 +313,7 @@ def serial_monitor():
         if auto.get():
             screen.see("end")
         screen.config(state=tk.DISABLED)
-        if datSel.get()==6:
+        if datSel.get()==0:
             dataScreen.insert(tk.INSERT, out)
             dataScreen.see("end")
         if "#START" in out:
@@ -387,7 +403,7 @@ def serial_monitor():
         print(lblVspan.get())
         print(lblLSB.get())
         for i in range(0,len(massSet)):
-            DadcSet[i] = math.ceil(VainSet[i]/LSB)
+            DadcSet[i] = math.ceil(pow(10,6)*VainSet[i]/LSB)
             DadcRatSet[i] = DadcSet[i]/pow(2.0,23)
 
     def plot():
@@ -433,11 +449,11 @@ def serial_monitor():
         elif module.get()==2:
             print('Calibration Curve')
             if invPlot.get():
-                horizDatID.set('Y Config')
-                vertDatID.set('X Config')
+                horizDatID.set('Y Config - Stimulus')
+                vertDatID.set('X Config - ADC Output')
             else:
-                horizDatID.set('X Config')
-                vertDatID.set('Y Config')
+                horizDatID.set('X Config - Stimulus')
+                vertDatID.set('Y Config - ADC Output')
             if xType.get()==0 and yType.get()==0 and (not yTypeA.get()):
                 df = pd.read_csv('SerialData.csv')
             else:
@@ -450,6 +466,8 @@ def serial_monitor():
             plot1 = fig.add_subplot(111)
             x = [None]*(nPars.get()+1)
             y = [None]*(nPars.get()+1)
+            rawX = [None]*(len(df['0'])+1)
+            rawY = [None]*(len(df['0'])+1)
             realX = [None]*(nPars.get()+1)
             realY = [None]*(nPars.get()+1)
             hands = ()
@@ -459,21 +477,29 @@ def serial_monitor():
             for i in range(0, nPars.get()+1):
                 if invPlot.get():
                     if xType.get()==1 and xTypeA.get():
-                        y[i] = massSet[i]#*9.81/1000
+                        for j in range(1,11):
+                            if xRealType.get()==j:
+                                y[i] = v[j][i]
                     else:
                         y[i] = i
                     x[i] = st.mean(df[str(i)])
                     if rawAct.get():
-                        p0, = plot1.plot(df[str(i)],y[i]*np.ones(len(df[str(i)])),linestyle='',marker='.',
+                        rawX[:] = df[str(i)]
+                        rawY[:] = y[i]*np.ones(len(df[str(i)]))
+                        p0, = plot1.plot(rawX,rawY,linestyle='',marker='.',
                                          markeredgecolor='blue',markerfacecolor='blue')
                 else:
                     if xType.get()==1 and xTypeA.get():
-                        x[i] = massSet[i]#*9.81/1000
+                        for j in range(1,11):
+                            if xRealType.get()==j:
+                                x[i] = v[j][i]
                     else:
                         x[i] = i
                     y[i] = st.mean(df[str(i)])
                     if rawAct.get():
-                        p0, = plot1.plot(x[i]*np.ones(len(df[str(i)])),df[str(i)],linestyle='',marker='.',
+                        rawY[:] = df[str(i)]
+                        rawX[:] = x[i]*np.ones(len(df[str(i)]))
+                        p0, = plot1.plot(rawX,rawY,linestyle='',marker='.',
                                          markeredgecolor='blue',markerfacecolor='blue')
             if rawAct.get():
                 hands = hands + (p0,)
@@ -497,15 +523,77 @@ def serial_monitor():
                     canvas.draw()
                     hands = hands + (p2,)
                     labs = labs + (eq,)
-                if legAct.get():
-                    fig.legend(hands, labs, 'upper right')
+            if realAct.get():
+                labs = labs + ('Actual Data',)
+                if xType.get()==1 and xTypeA.get():
+                    for i in range(1,11):
+                        if xRealType.get()==i:
+                            for j in range(0,nPars.get()+1):
+                                realX[j] = v[i][j]
+                            break
+                elif xType.get()==0:
+                    for i in range(0, nPars.get()+1):
+                        realX[i] = i
+
+                if yType.get()==1:
+                    print('Y physical')
+                    for i in range(1,11):
+                        if yRealType.get()==i:
+                            for j in range(0,nPars.get()+1):
+                                realY[j] = v[i][j]
+                            break
+                else:
+                    if yTypeA.get():
+                        for i in range(0, nPars.get()+1):
+                            realY[i] = v[9][i]
+                        print('Y ratio')
+                    else:
+                        for i in range(0, nPars.get()+1):
+                            realY[i] = v[8][i]
+                        print('Y decimal')
+
+                if invPlot.get():
+                    p3, = plot1.plot(realY,realX,marker='x',color='red',linestyle='')
                     canvas.draw()
+                    hands = hands + (p3,)
+                else:
+                    p3, = plot1.plot(realX,realY,marker='x',color='red',linestyle='')
+                    canvas.draw()
+                    hands = hands + (p3,)
+                if nPars.get()>0:
+                    if invPlot.get():
+                        zAct = np.polyfit(realY,realX,1)
+                    else:
+                        zAct = np.polyfit(realX,realY,1)
+                    pAct = np.poly1d(zAct)
+                    if zAct[1]>0:
+                        eqAct = "y = %.2fx + %.2f"%(zAct[0],zAct[1])
+                    else:
+                        eqAct = "y = %.2fx - %.2f"%(zAct[0],abs(zAct[1]))
+                    print(eqAct)
+                    if trendAct.get():
+                        labs = labs + (eqAct,)
+                        if invPlot.get():
+                            p4, = plot1.plot(realY,pAct(realY),color='red')
+                            canvas.draw()
+                            hands = hands + (p4,)
+                        else:
+                            p4, = plot1.plot(realX,pAct(realX),color='red')
+                            canvas.draw()
+                            hands = hands + (p4,)
+            if legAct.get() and nPars.get()>0:
+                fig.legend(hands, labs, 'upper right')
+                canvas.draw()
             if invPlot.get():
                 plot1.set_ylabel(par1.get(), fontsize=16)
                 plot1.set_xlabel(par2.get(), fontsize=16)
+                v10[:] = x
+                addTab()
             else:
                 plot1.set_xlabel(par1.get(), fontsize=16)
                 plot1.set_ylabel(par2.get(), fontsize=16)
+                v10[:] = y
+                addTab()
             #if
             canvas.draw()
             plotWin.set(True)
@@ -540,9 +628,45 @@ def serial_monitor():
             if xTypeA.get():
                 plotterCalXLabelFrame.pack_forget()
                 plotterCalXScalarFrame.pack_forget()
-                par1.set('Mass [g]')
+                xRealMassButton.pack(anchor='w')
+                xRealForceButton.pack(anchor='w')
+                xRealMomentButton.pack(anchor='w')
+                xRealStressButton.pack(anchor='w')
+                xRealStrainButton.pack(anchor='w')
+                xRealVwsbButton.pack(anchor='w')
+                xRealVainButton.pack(anchor='w')
+                xRealDadcButton.pack(anchor='w')
+                xRealDratButton.pack(anchor='w')
+                if xRealType.get()==1:
+                    par1.set('Mass [g]')
+                elif xRealType.get()==2:
+                    par1.set('Force [N]')
+                elif xRealType.get()==3:
+                    par1.set('Moment [N*m]')
+                elif xRealType.get()==4:
+                    par1.set('\u03C3 [MPa]')
+                elif xRealType.get()==5:
+                    par1.set('\u03BC\u03B5 [mm/mm]')
+                elif xRealType.get()==6:
+                    par1.set('Vwsb [mV]')
+                elif xRealType.get()==7:
+                    par1.set('Vain [mV]')
+                elif xRealType.get()==8:
+                    par1.set('ADC Output [D]')
+                elif xRealType.get()==9:
+                    par1.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
+                #par1.set('Mass [g]')
             else:
                 par1.set('Parameter [units]')
+                xRealMassButton.pack_forget()
+                xRealForceButton.pack_forget()
+                xRealMomentButton.pack_forget()
+                xRealStressButton.pack_forget()
+                xRealStrainButton.pack_forget()
+                xRealVwsbButton.pack_forget()
+                xRealVainButton.pack_forget()
+                xRealDadcButton.pack_forget()
+                xRealDratButton.pack_forget()
                 plotterCalXLabelFrame.pack(anchor='e',padx=10)
                 plotterCalXScalarFrame.pack(anchor='e',padx=10)
         else:
@@ -550,13 +674,22 @@ def serial_monitor():
             xMassBox.pack_forget()
             plotterCalXLabelFrame.pack_forget()
             plotterCalXScalarFrame.pack_forget()
+            xRealMassButton.pack_forget()
+            xRealForceButton.pack_forget()
+            xRealMomentButton.pack_forget()
+            xRealStressButton.pack_forget()
+            xRealStrainButton.pack_forget()
+            xRealVwsbButton.pack_forget()
+            xRealVainButton.pack_forget()
+            xRealDadcButton.pack_forget()
+            xRealDratButton.pack_forget()
         plot()
 
     def yConfig():
         if yType.get()==1:
             yRatioBox.pack_forget()
-            yCustomButton.pack(anchor='w', padx=20)
             yADCButton.pack(anchor='w', padx=20)
+            yCustomButton.pack(anchor='w', padx=20)
             if yTypeB.get()==0:
                 par2.set('Parameter [units]')
                 yScalarS.set('1.0')
@@ -565,6 +698,15 @@ def serial_monitor():
                 plotterCalYVfsLabel.pack_forget()
                 plotterCalYVspanLabel.pack_forget()
                 plotterCalYLSBLabel.pack_forget()
+                yRealMassButton.pack_forget()
+                yRealForceButton.pack_forget()
+                yRealMomentButton.pack_forget()
+                yRealStressButton.pack_forget()
+                yRealStrainButton.pack_forget()
+                yRealVwsbButton.pack_forget()
+                yRealVainButton.pack_forget()
+                yRealDadcButton.pack_forget()
+                yRealDratButton.pack_forget()
                 plotterCalYLabelFrame.pack(anchor='e',padx=10)
                 plotterCalYScalarFrame.pack(anchor='e',padx=10)
                 plotterCalYOffsetFrame.pack(anchor='e',padx=10)
@@ -577,15 +719,65 @@ def serial_monitor():
                 plotterCalYVfsLabel.pack(anchor='w',padx=10)
                 plotterCalYVspanLabel.pack(anchor='w',padx=10)
                 plotterCalYLSBLabel.pack(anchor='w',padx=10)
-                par2.set('Voltage [mV]')
-                yScalarS.set(str(LSB/pow(10,6)))
+                yRealMassButton.pack(anchor='w')
+                yRealForceButton.pack(anchor='w')
+                yRealMomentButton.pack(anchor='w')
+                yRealStressButton.pack(anchor='w')
+                yRealStrainButton.pack(anchor='w')
+                yRealVwsbButton.pack(anchor='w')
+                yRealVainButton.pack(anchor='w')
+                yRealDadcButton.pack(anchor='w')
+                yRealDratButton.pack(anchor='w')
+                if yRealType.get()==1:
+                    par2.set('Mass [g]')
+                    yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*g*pow(10.0,6)*(xf-xs))))
+                elif yRealType.get()==2:
+                    par2.set('Force [N]')
+                    yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9)*(xf-xs))))
+                elif yRealType.get()==3:
+                    par2.set('Moment [N*m]')
+                    yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9))))
+                elif yRealType.get()==4:
+                    par2.set('\u03C3 [MPa]')
+                    yScalarS.set(str(E*2.0*LSB/(Gia*Vs*S*pow(10.0,15))))
+                elif yRealType.get()==5:
+                    par2.set('\u03BC\u03B5 [mm/mm]')
+                    yScalarS.set(str(2.0*LSB/(Gia*Vs*S*pow(10.0,3))))
+                elif yRealType.get()==6:
+                    par2.set('Vwsb [mV]')
+                    yScalarS.set(str(LSB/(Gia*pow(10.0,6))))
+                elif yRealType.get()==7:
+                    par2.set('Vain [mV]')
+                    yScalarS.set(str(LSB/pow(10.0,6)))
+                elif yRealType.get()==8:
+                    par2.set('ADC Output [D]')
+                    yScalarS.set(str(1.0))
+                elif yRealType.get()==9:
+                    par2.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
+                    yScalarS.set(str(1.0/pow(2.0,23)))
+                #par2.set('Voltage [mV]')
+                #yScalarS.set(str(LSB/pow(10,6)))
         else:
             yCustomButton.pack_forget()
             yADCButton.pack_forget()
-            yRatioBox.pack(anchor='w',padx=15)
             plotterCalYLabelFrame.pack_forget()
             plotterCalYScalarFrame.pack_forget()
             plotterCalYOffsetFrame.pack_forget()
+            plotterCalYRgLabel.pack_forget()
+            plotterCalYRoLabel.pack_forget()
+            plotterCalYVfsLabel.pack_forget()
+            plotterCalYVspanLabel.pack_forget()
+            plotterCalYLSBLabel.pack_forget()
+            yRealMassButton.pack_forget()
+            yRealForceButton.pack_forget()
+            yRealMomentButton.pack_forget()
+            yRealStressButton.pack_forget()
+            yRealStrainButton.pack_forget()
+            yRealVwsbButton.pack_forget()
+            yRealVainButton.pack_forget()
+            yRealDadcButton.pack_forget()
+            yRealDratButton.pack_forget()
+            yRatioBox.pack(anchor='w',padx=15)
             if yTypeA.get():
                 text1 = "ADC Output Ratio ["
                 text2 = r'$\frac{{D}}{{2^{{{}}} }}$'.format(23)
@@ -630,6 +822,10 @@ def serial_monitor():
         strainCSV.seek(0)
         for i in range(0, nPars.get()+1):
             dfCal[str(i)] = (df[str(i)]+yO)*yG
+        if zeroAct.get():
+            yO = st.mean(dfCal['0'])
+            for i in range(0,nPars.get()+1):
+                dfCal[str(i)] = dfCal[str(i)] - yO
 
         dfCal.to_csv('StrainCalData.csv',index=False,header=head.get())
 
@@ -637,19 +833,7 @@ def serial_monitor():
         calPlotAdjust()
 
     def addPlotButtonK(event):
-        if module.get()==0:
-            if (not par1.get()=='') and (not par2.get()=='') and datReady.get():
-                plotButton.pack(side=tk.LEFT)#, padx=20)
-            else:
-                plotButton.pack_forget()
-        elif module.get()==2:
-            plotterVariableNameFrame.pack_forget()
-            plotButton.pack(side=tk.LEFT)#, padx=20)
-            plotterCalPropFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            plotterCalXYFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            input1.set('Mass [g]')
-            addTab()
-            v1[:] = massSet
+        addPlotButton()
 
     def addPlotButton():
         if module.get()==0:
@@ -663,8 +847,35 @@ def serial_monitor():
             plotterCalPropFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
             plotterCalXYFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
             input1.set('Mass [g]')
+            input2.set('Force [N]')
+            input3.set('Moment [N*m]')
+            input4.set('\u03C3 [MPa]')
+            input5.set('\u03BC\u03B5 [mm/mm]')
+            input6.set('Vwsb [mV]')
+            input7.set('Vain [mV]')
+            input8.set('Dadc [D]')
+            input9.set('FS Ratio [D/D]')
+            input10.set('ADC Output')
             addTab()
             v1[:] = massSet
+            v2[:] = forceSet
+            v3[:] = momentSet
+            v4[:] = stressSet
+            v5[:] = strainSet
+            v6[:] = VwsbSet
+            v7[:] = VainSet
+            v8[:] = DadcSet
+            v9[:] = DadcRatSet
+            global v
+            v[1] = v1
+            v[2] = v2
+            v[3] = v3
+            v[4] = v4
+            v[5] = v5
+            v[6] = v6
+            v[7] = v7
+            v[8] = v8
+            v[9] = v9
 
     def showData():
         if datWin.get():
@@ -697,6 +908,11 @@ def serial_monitor():
         dat3Button.pack_forget()
         dat4Button.pack_forget()
         dat5Button.pack_forget()
+        dat6Button.pack_forget()
+        dat7Button.pack_forget()
+        dat8Button.pack_forget()
+        dat9Button.pack_forget()
+        dat10Button.pack_forget()
         if not input1.get()=='':
             dat1Button.pack(side=tk.LEFT)
         if not input2.get()=='':
@@ -707,6 +923,19 @@ def serial_monitor():
             dat4Button.pack(side=tk.LEFT)
         if not input5.get()=='':
             dat5Button.pack(side=tk.LEFT)
+        if not input6.get()=='':
+            dat6Button.pack(side=tk.LEFT)
+        if not input7.get()=='':
+            dat7Button.pack(side=tk.LEFT)
+        if not input8.get()=='':
+            dat8Button.pack(side=tk.LEFT)
+        if not input9.get()=='':
+            dat9Button.pack(side=tk.LEFT)
+        if not input10.get()=='':
+            if module.get()==2:
+                dat10Button.pack(side=tk.LEFT, padx=10)
+            else:
+                dat10Button.pack(side=tk.LEFT)
 
     def logCSV():
         print('LogCSV')
@@ -780,11 +1009,11 @@ def serial_monitor():
         dataScreen.delete(1.0, tk.END)
 
         if module.get()==0:
-            if datSel.get()==6:
+            if datSel.get()==0:
                 print("Plotter Serial Monitor")
                 dataScreen.insert(tk.INSERT, screen.get(1.0, tk.END))
                 dataScreen.see("end")
-            elif datSel.get()==7:
+            elif datSel.get()==11:
                 print("All Data")
                 df = pd.read_csv('SerialData.csv')
                 dataScreen.insert(tk.INSERT, (datID.get()+'\n'))
@@ -814,11 +1043,11 @@ def serial_monitor():
                     dataScreen.insert(tk.INSERT, line)
                     dataScreen.insert(tk.INSERT, '\n')
         elif module.get()==2:
-            if datSel.get()==6:
+            if datSel.get()==0:
                 print("Plotter Serial Monitor")
                 dataScreen.insert(tk.INSERT, screen.get(1.0, tk.END))
                 dataScreen.see("end")
-            elif datSel.get()==7:
+            elif datSel.get()==11:
                 print("All Data")
                 df = pd.read_csv('SerialData.csv')
                 dataScreen.insert(tk.INSERT, (datID.get()+'\n'))
@@ -827,10 +1056,15 @@ def serial_monitor():
                     dataScreen.insert(tk.INSERT, out)
                 serFile.seek(0)
                 serCSV.seek(0)
-            elif datSel.get()==1:
-                for i in range(0,len(massSet)):
-                    dataScreen.insert(tk.INSERT, (str(v1[i])+'\n'))
-                    #dataScreen.insert(tk.INSERT, ('N'+str(i)+'\t=  '+str(v1[i])+' g\n'))
+            else:
+                global v
+                for j in range(0,11):
+                    if datSel.get()==j:
+                        for i in range(0,len(massSet)):
+                            dataScreen.insert(tk.INSERT, ("{:.8f}".format(v[j][i])+'\n'))
+                            #dataScreen.insert(tk.INSERT, ('N'+str(i)+'\t=  '+str(v1[i])+' g\n'))
+                        break
+            
 
     #----------------Page Widgets---------------------------------------------------------------------------
 
@@ -855,8 +1089,8 @@ def serial_monitor():
     plotterCanvasFrame              = tk.Frame(master=plotterDisplayFrame, relief=border, borderwidth=bw)
     plotterVariableFrame            = tk.Frame(master=plotterFrame, relief=border, borderwidth=bw)
     plotterVariableNameFrame        = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)#
-    plotterVariableEntryFrame       = tk.Frame(master=plotterVariableNameFrame, relief=border, borderwidth=bw)#
-    plotterVariableSelectFrame      = tk.Frame(master=plotterVariableNameFrame, relief=border, borderwidth=bw)#
+    plotterVariableEntryFrame       = tk.Frame(master=plotterVariableNameFrame)#, relief=border, borderwidth=bw)#
+    plotterVariableSelectFrame      = tk.Frame(master=plotterVariableNameFrame)#, relief=border, borderwidth=bw)#
     plotterVariableBoxFrame         = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)
     plotterPlotSelectFrame          = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)#
     plotterPlotSelectTextFrame      = tk.Frame(master=plotterPlotSelectFrame, relief=border, borderwidth=bw)#
@@ -869,21 +1103,23 @@ def serial_monitor():
     plotterCalXYFrame               = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)#
     plotterCalXFrame                = tk.Frame(master=plotterCalXYFrame, relief=border, borderwidth=bw)#
     plotterCalXTitleFrame           = tk.Frame(master=plotterCalXFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXBodyFrame            = tk.Frame(master=plotterCalXFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXBodyFrame            = tk.Frame(master=plotterCalXFrame, relief=border, borderwidth=bw)#
     plotterCalXTopFrame             = tk.Frame(master=plotterCalXBodyFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXBotFrame             = tk.Frame(master=plotterCalXBodyFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXBoxFrame             = tk.Frame(master=plotterCalXBotFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXEntryFrame           = tk.Frame(master=plotterCalXBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXBotFrame             = tk.Frame(master=plotterCalXBodyFrame, relief=border, borderwidth=bw)#
+    plotterCalXBoxFrame             = tk.Frame(master=plotterCalXBotFrame, relief=border, borderwidth=bw)#
+    plotterCalXEntryFrame           = tk.Frame(master=plotterCalXBotFrame, relief=border, borderwidth=bw)#
+    plotterCalXRealButtonFrame      = tk.Frame(master=plotterCalXBotFrame, relief=border, borderwidth=bw)#
     plotterCalXLabelFrame           = tk.Frame(master=plotterCalXEntryFrame)#, relief=border, borderwidth=bw)#
     plotterCalXScalarFrame          = tk.Frame(master=plotterCalXEntryFrame)#, relief=border, borderwidth=bw)#
 
     plotterCalYFrame                = tk.Frame(master=plotterCalXYFrame, relief=border, borderwidth=bw)#
     plotterCalYTitleFrame           = tk.Frame(master=plotterCalYFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYBodyFrame            = tk.Frame(master=plotterCalYFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYBodyFrame            = tk.Frame(master=plotterCalYFrame, relief=border, borderwidth=bw)#
     plotterCalYTopFrame             = tk.Frame(master=plotterCalYBodyFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYBotFrame             = tk.Frame(master=plotterCalYBodyFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYEntryFrame           = tk.Frame(master=plotterCalYBotFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYButton2Frame         = tk.Frame(master=plotterCalYBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYBotFrame             = tk.Frame(master=plotterCalYBodyFrame, relief=border, borderwidth=bw)#
+    plotterCalYEntryFrame           = tk.Frame(master=plotterCalYBotFrame, relief=border, borderwidth=bw)#
+    plotterCalYRealButtonFrame      = tk.Frame(master=plotterCalYBotFrame, relief=border, borderwidth=bw)#
+    plotterCalYButton2Frame         = tk.Frame(master=plotterCalYBotFrame, relief=border, borderwidth=bw)#
     plotterCalYLabelFrame           = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
     plotterCalYScalarFrame          = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
     plotterCalYOffsetFrame          = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
@@ -984,19 +1220,29 @@ def serial_monitor():
                                    value=1, pady=0, padx=0, command=plotter, indicatoron=0)
 
     datSerialButton = tk.Radiobutton(master=dataWindowHeaderSelectFrame, text="Serial Monitor", font=BUTTONFONT, variable=datSel,
-                                  value=6, command=datPrint, indicatoron=0, width=14)
+                                  value=0, command=datPrint, indicatoron=0, width=14)
     datAllButton = tk.Radiobutton(master=dataWindowHeaderSelectFrame, text="All Data", font=BUTTONFONT, variable=datSel,
-                                  value=7, command=datPrint, indicatoron=0, width=8)
+                                  value=11, command=datPrint, indicatoron=0, width=8)
     dat1Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input1, font=BUTTONFONT, variable=datSel,
-                                  value=1, command=datPrint, indicatoron=0, padx=3)#width=6)
+                                  value=1, command=datPrint, indicatoron=0, padx=3)
     dat2Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input2, font=BUTTONFONT, variable=datSel,
-                                  value=2, command=datPrint, indicatoron=0, width=6)
+                                  value=2, command=datPrint, indicatoron=0, padx=3)
     dat3Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input3, font=BUTTONFONT, variable=datSel,
-                                  value=3, command=datPrint, indicatoron=0, width=6)
+                                  value=3, command=datPrint, indicatoron=0, padx=3)
     dat4Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input4, font=BUTTONFONT, variable=datSel,
-                                  value=4, command=datPrint, indicatoron=0, width=6)
+                                  value=4, command=datPrint, indicatoron=0, padx=3)
     dat5Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input5, font=BUTTONFONT, variable=datSel,
-                                  value=5, command=datPrint, indicatoron=0, width=6)
+                                  value=5, command=datPrint, indicatoron=0, padx=3)
+    dat6Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input6, font=BUTTONFONT, variable=datSel,
+                                  value=6, command=datPrint, indicatoron=0, padx=3)
+    dat7Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input7, font=BUTTONFONT, variable=datSel,
+                                  value=7, command=datPrint, indicatoron=0, padx=3)
+    dat8Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input8, font=BUTTONFONT, variable=datSel,
+                                  value=8, command=datPrint, indicatoron=0, padx=3)
+    dat9Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input9, font=BUTTONFONT, variable=datSel,
+                                  value=9, command=datPrint, indicatoron=0, padx=3)
+    dat10Button = tk.Radiobutton(master=dataWindowHeaderSelectFrame, textvariable=input10, font=BUTTONFONT, variable=datSel,
+                                  value=10, command=datPrint, indicatoron=0, padx=3)
 
     levelPlotButton = tk.Radiobutton(master=plotterCalPropRadioFrame,variable=calPlotType,text='Default Calibration Curve',value=0,font=BUTTONFONT,command=calPlotConfig)
     boxPlotButton = tk.Radiobutton(master=plotterCalPropRadioFrame,variable=calPlotType,text='Box Plot',value=1,font=BUTTONFONT,command=calPlotConfig)
@@ -1009,6 +1255,26 @@ def serial_monitor():
     yPButton = tk.Radiobutton(master=plotterCalYTopFrame, variable=yType, value=1, font=BUTTONFONT, command=yConfig, text='Physical Value')
     yCustomButton = tk.Radiobutton(master=plotterCalYButton2Frame, variable=yTypeB, value=0, font=BUTTONFONT, command=yConfig, text='Custom')
     yADCButton = tk.Radiobutton(master=plotterCalYButton2Frame, variable=yTypeB, value=1, font=BUTTONFONT, command=yConfig, text='ADC Conversion')
+    
+    xRealMassButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=1, font=BUTTONFONT, command=xConfig, text='Mass [g]')
+    xRealForceButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=2, font=BUTTONFONT, command=xConfig, text='Force [N]')
+    xRealMomentButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=3, font=BUTTONFONT, command=xConfig, text='Moment [N*m]')
+    xRealStressButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=4, font=BUTTONFONT, command=xConfig, text='\u03C3 [MPa]')
+    xRealStrainButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=5, font=BUTTONFONT, command=xConfig, text='\u03BC\u03B5 [mm/mm]')
+    xRealVwsbButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=6, font=BUTTONFONT, command=xConfig, text='Vwsb [mV]')
+    xRealVainButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=7, font=BUTTONFONT, command=xConfig, text='Vain [mV]')
+    xRealDadcButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=8, font=BUTTONFONT, command=xConfig, text='Dadc [D]')
+    xRealDratButton = tk.Radiobutton(master=plotterCalXRealButtonFrame, variable=xRealType, value=9, font=BUTTONFONT, command=xConfig, text='FS Ratio [D/D]')
+
+    yRealMassButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=1, font=BUTTONFONT, command=yConfig, text='Mass [g]')
+    yRealForceButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=2, font=BUTTONFONT, command=yConfig, text='Force [N]')
+    yRealMomentButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=3, font=BUTTONFONT, command=yConfig, text='Moment [N*m]')
+    yRealStressButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=4, font=BUTTONFONT, command=yConfig, text='\u03C3 [MPa]')
+    yRealStrainButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=5, font=BUTTONFONT, command=yConfig, text='\u03BC\u03B5 [mm/mm]')
+    yRealVwsbButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=6, font=BUTTONFONT, command=yConfig, text='Vwsb [mV]')
+    yRealVainButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=7, font=BUTTONFONT, command=yConfig, text='Vain [mV]')
+    yRealDadcButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=8, font=BUTTONFONT, command=yConfig, text='Dadc [D]')
+    yRealDratButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=9, font=BUTTONFONT, command=yConfig, text='FS Ratio [D/D]')
     
         #generalBox = tk.Checkbutton(master=generalBoxFrame, text="General", variable=bx1, bg=color, activebackground=color)
     autoscrollBox = tk.Checkbutton(master=boxFrame, text="Autoscroll", variable=auto)
@@ -1025,8 +1291,9 @@ def serial_monitor():
     calTrendBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Trendline", variable=trendAct, command=plot)
     calLegendBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Legend", variable=legAct, command=plot)
     calActualBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Actual Data", variable=realAct, command=plot)
+    calZeroBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Zero Output", variable=zeroAct, command=plot)
 
-    xMassBox = tk.Checkbutton(master=plotterCalXBoxFrame, variable=xTypeA, font=BUTTONFONT, command=xConfig, text='Measured Mass Set')
+    xMassBox = tk.Checkbutton(master=plotterCalXBoxFrame, variable=xTypeA, font=BUTTONFONT, command=xConfig, text='Measured Data Set')
     yRatioBox = tk.Checkbutton(master=plotterCalYButton2Frame, variable=yTypeA, font=BUTTONFONT, command=yConfig, text='Full Scale Ratio')
     
         #generalMenu = tk.OptionMenu(master...)
@@ -1071,21 +1338,23 @@ def serial_monitor():
     plotterCalXFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
     plotterCalYFrame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
     
-    plotterCalXTitleFrame.pack(side=tk.TOP,anchor='n',padx=200)#fill=tk.X,expand=True,
+    plotterCalXTitleFrame.pack(side=tk.TOP,anchor='n',padx=100)#fill=tk.X,expand=True,
     plotterCalXBodyFrame.pack(side=tk.TOP,fill=tk.BOTH,expand=True,anchor='n')
     plotterCalXTopFrame.pack(side=tk.TOP,fill=tk.BOTH,expand=True)
     plotterCalXBotFrame.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True,pady=15)
     plotterCalXBoxFrame.pack(side=tk.LEFT,anchor='nw')
-    plotterCalXEntryFrame.pack(anchor='nw')
+    plotterCalXEntryFrame.pack(side=tk.LEFT,anchor='nw')
+    plotterCalXRealButtonFrame.pack(side=tk.LEFT,anchor='nw')
     plotterCalXLabelFrame.pack(anchor='e',padx=10)
     plotterCalXScalarFrame.pack(anchor='e',padx=10)
     
-    plotterCalYTitleFrame.pack(side=tk.TOP,anchor='n',padx=200)
+    plotterCalYTitleFrame.pack(side=tk.TOP,anchor='n',padx=100)
     plotterCalYBodyFrame.pack(side=tk.TOP,fill=tk.BOTH,expand=True,anchor='n')
     plotterCalYTopFrame.pack(side=tk.TOP,fill=tk.BOTH,expand=True)
     plotterCalYBotFrame.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True)
     plotterCalYButton2Frame.pack(side=tk.LEFT,anchor='nw')
-    plotterCalYEntryFrame.pack(anchor='nw')
+    plotterCalYEntryFrame.pack(side=tk.LEFT,anchor='nw')
+    plotterCalYRealButtonFrame.pack(side=tk.LEFT,anchor='nw')
     plotterCalYLabelFrame.pack(anchor='e',padx=10)
     plotterCalYScalarFrame.pack(anchor='e',padx=10)
     plotterCalYOffsetFrame.pack(anchor='e',padx=10)
@@ -1159,8 +1428,27 @@ def serial_monitor():
     yNButton.pack(anchor='w')
     xPButton.pack(anchor='w')
     yPButton.pack(anchor='w')
-    yCustomButton.pack(anchor='w', padx=20)
     yADCButton.pack(anchor='w', padx=20)
+    yCustomButton.pack(anchor='w', padx=20)
+
+    xRealMassButton.pack(anchor='w')
+    xRealForceButton.pack(anchor='w')
+    xRealMomentButton.pack(anchor='w')
+    xRealStressButton.pack(anchor='w')
+    xRealStrainButton.pack(anchor='w')
+    xRealVwsbButton.pack(anchor='w')
+    xRealVainButton.pack(anchor='w')
+    xRealDadcButton.pack(anchor='w')
+    xRealDratButton.pack(anchor='w')
+    yRealMassButton.pack(anchor='w')
+    yRealForceButton.pack(anchor='w')
+    yRealMomentButton.pack(anchor='w')
+    yRealStressButton.pack(anchor='w')
+    yRealStrainButton.pack(anchor='w')
+    yRealVwsbButton.pack(anchor='w')
+    yRealVainButton.pack(anchor='w')
+    yRealDadcButton.pack(anchor='w')
+    yRealDratButton.pack(anchor='w')
     
         #generalBox.grid(row=0,column=0,sticky="w")
     autoscrollBox.pack(side=tk.LEFT, pady=2, padx=5)
@@ -1174,6 +1462,7 @@ def serial_monitor():
     calTrendBox.pack(anchor='w')
     calLegendBox.pack(anchor='w')
     calActualBox.pack(anchor='w')
+    calZeroBox.pack(anchor='w')
     xMassBox.pack(anchor='nw',padx=20)
 
     plotterMenu.pack(side=tk.RIGHT,pady=40,padx=60)

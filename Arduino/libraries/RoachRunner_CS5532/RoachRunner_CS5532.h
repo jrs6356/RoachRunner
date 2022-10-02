@@ -638,9 +638,9 @@
 		void CSRinit(void);
 		void calPrep(reg);
 		void selfOffCal(reg);
-		void sysOffCal(reg);
+		void sysOffCal(reg, bool);
 		void selfGainCal(reg);
-		void sysGainCal(reg);
+		void sysGainCal(reg, bool);
 		void uploadOffset(reg, uint32_t);
 		void uploadOffset(reg, float, bool);
 		void uploadGain(reg, uint32_t);

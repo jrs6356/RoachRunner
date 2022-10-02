@@ -28,6 +28,7 @@ int k = 0;
 int m = 0;
 int n = 0;
 int N = 51;
+const int cals = 100;
 const int ele = 1000;
 double offset = 0;
 double t1 = 0;
@@ -35,9 +36,9 @@ double t2 = 0;
 //double dt = 0;
 float f = 0;
 float G = 1;
-double offRegVal[50];
+double offRegVal[cals];
 double offRegValAve = 0;
-double gainRegVal[50];
+double gainRegVal[cals];
 double gainRegValAve = 0;
 uint32_t meas[ele];// = {};
 byte flags[ele];
@@ -157,12 +158,14 @@ void setup() {
   startADC2();
   //calOff();
   //        adc1.uploadOffset(Offset1, 3868397824);
-  //  adc1.uploadOffset(Offset1, 3908051546);
-  adc1.uploadOffset(Offset1, 3906343680);
+  //    adc1.uploadOffset(Offset1, 3908051546);
+  //  adc1.uploadOffset(Offset1, 3906343680);
+  adc1.uploadOffset(Offset1, 3912222208);
   //calGain();
   //        adc1.uploadGain(Gain1, 48609312);
-  //  adc1.uploadGain(Gain1, 25633999);
-  adc1.uploadGain(Gain1, 25326871);
+  //    adc1.uploadGain(Gain1, 25633999);
+  //  adc1.uploadGain(Gain1, 25326871);
+  adc1.uploadGain(Gain1, 24527489);
   adc1.contMeas(Setup4);
   for(int i=0;i<ele;++i){
     meas[i]=0;
@@ -264,8 +267,9 @@ void calOff(){
   while(!collect){}
   digitalWrite(led, HIGH);
   delay(50);
-  for(int i=0;i<10;++i){
-    adc1.sysOffCal(Setup3);
+  for(int i=0;i<cals;++i){
+    adc1.sysOffCal(Setup3,false);
+    Serial.println(i);
     offRegVal[i] = adc1.offsetReg1.out;
     //print32(adc1.offsetReg1.out);
   }
@@ -273,14 +277,14 @@ void calOff(){
   digitalWrite(led, LOW);
   collect = false;
   Serial.print('\n');
-  for(int i=0;i<10;++i){
+  for(int i=0;i<cals;++i){
     //Serial.print("\n");
     Serial.print(i);Serial.print(":\t");
     //sciNote(offRegVal[i],6);
     Serial.println(offRegVal[i]);
     offRegValAve = offRegValAve + offRegVal[i];
   }
-  offRegValAve = offRegValAve / 10.0;
+  offRegValAve = offRegValAve / float(cals);
   Serial.print("\n\nAverage Offset:\t");
   Serial.println(offRegValAve);
   //sciNote(offRegValAve,6);
@@ -294,8 +298,9 @@ void calGain(){
   while(!collect){}
   digitalWrite(led, HIGH);
   delay(50);
-  for(int i=0;i<10;++i){
-    adc1.sysGainCal(Setup3);
+  for(int i=0;i<cals;++i){
+    adc1.sysGainCal(Setup3,false);
+    Serial.println(i);
     gainRegVal[i] = adc1.gainReg1.out;
     //print32(adc1.offsetReg1.out);
   }
@@ -303,14 +308,14 @@ void calGain(){
   digitalWrite(led, LOW);
   collect = false;
   Serial.print('\n');
-  for(int i=0;i<10;++i){
+  for(int i=0;i<cals;++i){
     //Serial.print("\n");
     Serial.print(i);Serial.print(":\t");
     //sciNote(gainRegVal[i],6);
     Serial.println(gainRegVal[i]);
     gainRegValAve = gainRegValAve + gainRegVal[i];
   }
-  gainRegValAve = gainRegValAve / 10.0;
+  gainRegValAve = gainRegValAve / float(cals);
   Serial.print("\n\nAverage Gain:\t");
   //sciNote(gainRegValAve,6);
   Serial.println(gainRegValAve);

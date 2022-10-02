@@ -1790,8 +1790,10 @@ void CS5532::selfOffCal(reg r){
 	}
 }
 
-void CS5532::sysOffCal(reg r){			//Use this for G > 1
-	Serial.print("\n\t\t-------- ");Serial.print(name);Serial.println(" System Offset Cal --------");
+void CS5532::sysOffCal(reg r, bool _v){			//Use this for G > 1
+	if(_v){
+		Serial.print("\n\t\t-------- ");Serial.print(name);Serial.println(" System Offset Cal --------");
+	}
 	comB.reset();
 	comB.CC = CC_SYS_OC;
 	calPrep(r);
@@ -1815,8 +1817,20 @@ void CS5532::sysOffCal(reg r){			//Use this for G > 1
 		hold8(comB.out);
 		while(digitalRead(sdoFlag)){}
 		readReg(r2);
-		comB.rolecall();
-		rolecall(r2);
+		if(_v){
+			comB.rolecall();
+			rolecall(r2);
+		}
+		//else{
+			//switch(r2){
+				//case Offset1:
+					//Serial.print(offsetReg1.out);
+				//case Offset2:
+					//Serial.print(offsetReg2.out);
+				//default:
+					//break;
+			//}
+		//}
 		comB.reset();
 		String calType = offsetReg1.calTypes[4];
 		switch(r2){
@@ -1952,8 +1966,10 @@ void CS5532::selfGainCal(reg r){
 	}
 }
 
-void CS5532::sysGainCal(reg r){			//Use this for VREF > 2.5
-	Serial.print("\n\t\t-------- ");Serial.print(name);Serial.println(" System Gain Cal --------");
+void CS5532::sysGainCal(reg r, bool _v){			//Use this for VREF > 2.5
+	if(_v){
+		Serial.print("\n\t\t-------- ");Serial.print(name);Serial.println(" System Gain Cal --------");
+	}
 	comB.reset();
 	comB.CC = CC_SYS_GC;
 	calPrep(r);
@@ -1977,8 +1993,20 @@ void CS5532::sysGainCal(reg r){			//Use this for VREF > 2.5
 		hold8(comB.out);
 		while(digitalRead(sdoFlag)){}
 		readReg(r2);
-		comB.rolecall();
-		rolecall(r2);
+		if(_v){
+			comB.rolecall();
+			rolecall(r2);
+		}
+		//else{
+			//switch(r2){
+				//case Gain1:
+					//Serial.print(gainReg1.out);
+				//case Gain2:
+					//Serial.print(gainReg2.out);
+				//default:
+					//break;
+			//}
+		//}
 		comB.reset();
 		String calType = gainReg1.calTypes[3];
 		switch(r2){
