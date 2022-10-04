@@ -52,6 +52,10 @@ def serial_monitor():
     onInd = ImageTk.PhotoImage(img.resize((10,10)))
     img = Image.open('Indicator_Off.png')
     offInd = ImageTk.PhotoImage(img.resize((10,10)))
+    img = Image.open('LeftPoint.png')
+    lPoint = ImageTk.PhotoImage(img.resize((10,10)))
+    img = Image.open('RightPoint.png')
+    rPoint = ImageTk.PhotoImage(img.resize((10,10)))
 
     serFile = open('SerialData.txt', mode='r+')
     serFile.truncate(0)
@@ -168,6 +172,16 @@ def serial_monitor():
     lblVfs = tk.StringVar(master=window)
     lblVspan = tk.StringVar(master=window)
     lblLSB = tk.StringVar(master=window)
+    nBinS = tk.StringVar(master=window, value='20')
+    eleActS = tk.StringVar(master=window, value='Element: 0')
+    binMeanS = tk.StringVar(master=window)
+    binMinS = tk.StringVar(master=window)
+    binMaxS = tk.StringVar(master=window)
+    binRangeS = tk.StringVar(master=window)
+    binSTDS = tk.StringVar(master=window)
+    binNS = tk.StringVar(master=window)
+    binRiceS = tk.StringVar(master=window)
+    binSturS = tk.StringVar(master=window)
     
         #generalBoolean = tk.BooleanVar(master=window, value=False)
     status = tk.BooleanVar(master=window, value=True)
@@ -206,6 +220,8 @@ def serial_monitor():
     xType = tk.IntVar(master=window, value=0)
     yType = tk.IntVar(master=window, value=0)
     yTypeB = tk.IntVar(master=window, value=1)
+    distType = tk.IntVar(master=window, value=0)
+    eleAct = tk.IntVar(master=window, value=0)
 
         #generalDouble = tk.DoubleVar(master=window, value=0.0)
     y0 = tk.DoubleVar(master=window, value=0.0)
@@ -447,158 +463,245 @@ def serial_monitor():
             print('Not yet available')
 
         elif module.get()==2:
-            print('Calibration Curve')
-            if invPlot.get():
-                horizDatID.set('Y Config - Stimulus')
-                vertDatID.set('X Config - ADC Output')
-            else:
-                horizDatID.set('X Config - Stimulus')
-                vertDatID.set('Y Config - ADC Output')
-            if xType.get()==0 and yType.get()==0 and (not yTypeA.get()):
-                df = pd.read_csv('SerialData.csv')
-            else:
-                calPlotAdjust()
-                df = pd.read_csv('StrainCalData.csv')
-            serFile.seek(0)
-            serCSV.seek(0)
-            data = serFile.readlines()
-            fig.clf()
-            plot1 = fig.add_subplot(111)
-            x = [None]*(nPars.get()+1)
-            y = [None]*(nPars.get()+1)
-            rawX = [None]*(len(df['0'])+1)
-            rawY = [None]*(len(df['0'])+1)
-            realX = [None]*(nPars.get()+1)
-            realY = [None]*(nPars.get()+1)
-            hands = ()
-            labs = ()
-            nSamp.set(len(df['0']))
-            print(nSamp.get())
-            for i in range(0, nPars.get()+1):
+            if calPlotType.get()==0:
+                print('Calibration Curve')
                 if invPlot.get():
-                    if xType.get()==1 and xTypeA.get():
-                        for j in range(1,11):
-                            if xRealType.get()==j:
-                                y[i] = v[j][i]
-                    else:
-                        y[i] = i
-                    x[i] = st.mean(df[str(i)])
-                    if rawAct.get():
-                        rawX[:] = df[str(i)]
-                        rawY[:] = y[i]*np.ones(len(df[str(i)]))
-                        p0, = plot1.plot(rawX,rawY,linestyle='',marker='.',
-                                         markeredgecolor='blue',markerfacecolor='blue')
+                    horizDatID.set('Y Config - Stimulus')
+                    vertDatID.set('X Config - ADC Output')
                 else:
-                    if xType.get()==1 and xTypeA.get():
-                        for j in range(1,11):
-                            if xRealType.get()==j:
-                                x[i] = v[j][i]
-                    else:
-                        x[i] = i
-                    y[i] = st.mean(df[str(i)])
-                    if rawAct.get():
-                        rawY[:] = df[str(i)]
-                        rawX[:] = x[i]*np.ones(len(df[str(i)]))
-                        p0, = plot1.plot(rawX,rawY,linestyle='',marker='.',
-                                         markeredgecolor='blue',markerfacecolor='blue')
-            if rawAct.get():
-                hands = hands + (p0,)
-                labs = labs + ('Raw Data',)
-            canvas.draw()
-            if aveAct.get():
-                p1, = plot1.plot(x,y,marker='o',markeredgecolor='black',markerfacecolor='white',linestyle='',color='black')
-                canvas.draw()
-                hands = hands + (p1,)
-                labs = labs + ('Averages',)
-            if nPars.get()>0:
-                z = np.polyfit(x,y,1)
-                p = np.poly1d(z)
-                if z[1]>0:
-                    eq = "y = %.2fx + %.2f"%(z[0],z[1])
+                    horizDatID.set('X Config - Stimulus')
+                    vertDatID.set('Y Config - ADC Output')
+                if xType.get()==0 and yType.get()==0 and (not yTypeA.get()):
+                    df = pd.read_csv('SerialData.csv')
                 else:
-                    eq = "y = %.2fx - %.2f"%(z[0],abs(z[1]))
-                print(eq)
-                if trendAct.get():
-                    p2, = plot1.plot(x,p(x),linestyle='--',color='black')
-                    canvas.draw()
-                    hands = hands + (p2,)
-                    labs = labs + (eq,)
-            if realAct.get():
-                labs = labs + ('Actual Data',)
-                if xType.get()==1 and xTypeA.get():
-                    for i in range(1,11):
-                        if xRealType.get()==i:
-                            for j in range(0,nPars.get()+1):
-                                realX[j] = v[i][j]
-                            break
-                elif xType.get()==0:
-                    for i in range(0, nPars.get()+1):
-                        realX[i] = i
-
-                if yType.get()==1:
-                    print('Y physical')
-                    for i in range(1,11):
-                        if yRealType.get()==i:
-                            for j in range(0,nPars.get()+1):
-                                realY[j] = v[i][j]
-                            break
-                else:
-                    if yTypeA.get():
-                        for i in range(0, nPars.get()+1):
-                            realY[i] = v[9][i]
-                        print('Y ratio')
-                    else:
-                        for i in range(0, nPars.get()+1):
-                            realY[i] = v[8][i]
-                        print('Y decimal')
-
-                if invPlot.get():
-                    p3, = plot1.plot(realY,realX,marker='x',color='red',linestyle='')
-                    canvas.draw()
-                    hands = hands + (p3,)
-                else:
-                    p3, = plot1.plot(realX,realY,marker='x',color='red',linestyle='')
-                    canvas.draw()
-                    hands = hands + (p3,)
-                if nPars.get()>0:
+                    calPlotAdjust()
+                    df = pd.read_csv('StrainCalData.csv')
+                serFile.seek(0)
+                serCSV.seek(0)
+                data = serFile.readlines()
+                fig.clf()
+                plot1 = fig.add_subplot(111)
+                x = [None]*(nPars.get()+1)
+                y = [None]*(nPars.get()+1)
+                rawX = [None]*(len(df['0'])+1)
+                rawY = [None]*(len(df['0'])+1)
+                realX = [None]*(nPars.get()+1)
+                realY = [None]*(nPars.get()+1)
+                hands = ()
+                labs = ()
+                nSamp.set(len(df['0']))
+                print(nSamp.get())
+                for i in range(0, nPars.get()+1):
                     if invPlot.get():
-                        zAct = np.polyfit(realY,realX,1)
-                    else:
-                        zAct = np.polyfit(realX,realY,1)
-                    pAct = np.poly1d(zAct)
-                    if zAct[1]>0:
-                        eqAct = "y = %.2fx + %.2f"%(zAct[0],zAct[1])
-                    else:
-                        eqAct = "y = %.2fx - %.2f"%(zAct[0],abs(zAct[1]))
-                    print(eqAct)
-                    if trendAct.get():
-                        labs = labs + (eqAct,)
-                        if invPlot.get():
-                            p4, = plot1.plot(realY,pAct(realY),color='red')
-                            canvas.draw()
-                            hands = hands + (p4,)
+                        if xType.get()==1 and xTypeA.get():
+                            for j in range(1,11):
+                                if xRealType.get()==j:
+                                    y[i] = v[j][i]
                         else:
-                            p4, = plot1.plot(realX,pAct(realX),color='red')
-                            canvas.draw()
-                            hands = hands + (p4,)
-            if legAct.get() and nPars.get()>0:
-                fig.legend(hands, labs, 'upper right')
+                            y[i] = i
+                        x[i] = st.mean(df[str(i)])
+                        if rawAct.get():
+                            rawX[:] = df[str(i)]
+                            rawY[:] = y[i]*np.ones(len(df[str(i)]))
+                            p0, = plot1.plot(rawX,rawY,linestyle='',marker='.',
+                                             markeredgecolor='blue',markerfacecolor='blue')
+                    else:
+                        if xType.get()==1 and xTypeA.get():
+                            for j in range(1,11):
+                                if xRealType.get()==j:
+                                    x[i] = v[j][i]
+                        else:
+                            x[i] = i
+                        y[i] = st.mean(df[str(i)])
+                        if rawAct.get():
+                            rawY[:] = df[str(i)]
+                            rawX[:] = x[i]*np.ones(len(df[str(i)]))
+                            p0, = plot1.plot(rawX,rawY,linestyle='',marker='.',
+                                             markeredgecolor='blue',markerfacecolor='blue')
+                if rawAct.get():
+                    hands = hands + (p0,)
+                    labs = labs + ('Raw Data',)
                 canvas.draw()
-            if invPlot.get():
-                plot1.set_ylabel(par1.get(), fontsize=16)
-                plot1.set_xlabel(par2.get(), fontsize=16)
-                v10[:] = x
-                addTab()
-            else:
-                plot1.set_xlabel(par1.get(), fontsize=16)
-                plot1.set_ylabel(par2.get(), fontsize=16)
-                v10[:] = y
-                addTab()
-            #if
-            canvas.draw()
-            plotWin.set(True)
-            plotWindowBox.pack(side=tk.TOP, pady=10, padx=20, anchor='nw')
-            showPlot()
+                if aveAct.get():
+                    p1, = plot1.plot(x,y,marker='o',markeredgecolor='black',markerfacecolor='white',linestyle='',color='black')
+                    canvas.draw()
+                    hands = hands + (p1,)
+                    labs = labs + ('Averages',)
+                if nPars.get()>0:
+                    z = np.polyfit(x,y,1)
+                    p = np.poly1d(z)
+                    if z[1]>0:
+                        eq = "y = %.2fx + %.2f"%(z[0],z[1])
+                    else:
+                        eq = "y = %.2fx - %.2f"%(z[0],abs(z[1]))
+                    print(eq)
+                    if trendAct.get():
+                        p2, = plot1.plot(x,p(x),linestyle='--',color='black')
+                        canvas.draw()
+                        hands = hands + (p2,)
+                        labs = labs + (eq,)
+                if realAct.get():
+                    labs = labs + ('Actual Data',)
+                    if xType.get()==1 and xTypeA.get():
+                        for i in range(1,11):
+                            if xRealType.get()==i:
+                                for j in range(0,nPars.get()+1):
+                                    realX[j] = v[i][j]
+                                break
+                    elif xType.get()==0:
+                        for i in range(0, nPars.get()+1):
+                            realX[i] = i
+
+                    if yType.get()==1:
+                        print('Y physical')
+                        for i in range(1,11):
+                            if yRealType.get()==i:
+                                for j in range(0,nPars.get()+1):
+                                    realY[j] = v[i][j]
+                                break
+                    else:
+                        if yTypeA.get():
+                            for i in range(0, nPars.get()+1):
+                                realY[i] = v[9][i]
+                            print('Y ratio')
+                        else:
+                            for i in range(0, nPars.get()+1):
+                                realY[i] = v[8][i]
+                            print('Y decimal')
+
+                    if invPlot.get():
+                        p3, = plot1.plot(realY,realX,marker='x',color='red',linestyle='')
+                        canvas.draw()
+                        hands = hands + (p3,)
+                    else:
+                        p3, = plot1.plot(realX,realY,marker='x',color='red',linestyle='')
+                        canvas.draw()
+                        hands = hands + (p3,)
+                    if nPars.get()>0:
+                        if invPlot.get():
+                            zAct = np.polyfit(realY,realX,1)
+                        else:
+                            zAct = np.polyfit(realX,realY,1)
+                        pAct = np.poly1d(zAct)
+                        if zAct[1]>0:
+                            eqAct = "y = %.2fx + %.2f"%(zAct[0],zAct[1])
+                        else:
+                            eqAct = "y = %.2fx - %.2f"%(zAct[0],abs(zAct[1]))
+                        print(eqAct)
+                        if trendAct.get():
+                            labs = labs + (eqAct,)
+                            if invPlot.get():
+                                p4, = plot1.plot(realY,pAct(realY),color='red')
+                                canvas.draw()
+                                hands = hands + (p4,)
+                            else:
+                                p4, = plot1.plot(realX,pAct(realX),color='red')
+                                canvas.draw()
+                                hands = hands + (p4,)
+                if legAct.get() and nPars.get()>0:
+                    fig.legend(hands, labs, 'upper right')
+                    canvas.draw()
+                if invPlot.get():
+                    plot1.set_ylabel(par1.get(), fontsize=16)
+                    plot1.set_xlabel(par2.get(), fontsize=16)
+                    v10[:] = x
+                    addTab()
+                else:
+                    plot1.set_xlabel(par1.get(), fontsize=16)
+                    plot1.set_ylabel(par2.get(), fontsize=16)
+                    v10[:] = y
+                    addTab()
+                #if
+                canvas.draw()
+                plotWin.set(True)
+                plotWindowBox.pack(side=tk.TOP, pady=10, padx=20, anchor='nw')
+                showPlot()
+            elif calPlotType.get()==1:
+                print('Box Plot')
+                if invPlot.get():
+                    horizDatID.set('Y Config - Stimulus')
+                    vertDatID.set('X Config - ADC Output')
+                else:
+                    horizDatID.set('X Config - Stimulus')
+                    vertDatID.set('Y Config - ADC Output')
+                if xType.get()==0 and yType.get()==0 and (not yTypeA.get()):
+                    df = pd.read_csv('SerialData.csv')
+                else:
+                    calPlotAdjust()
+                    df = pd.read_csv('StrainCalData.csv')
+                serFile.seek(0)
+                serCSV.seek(0)
+                data = serFile.readlines()
+                fig.clf()
+                plot1 = fig.add_subplot(111)
+                #plot1 = fig.add_axes([0,0,1,1])
+                x = [None]*(nPars.get()+1)
+                y = [None]*(nPars.get()+1)
+                rawX = [None]*(len(df['0'])+1)
+                rawY = [None]*(len(df['0'])+1)
+                realX = [None]*(nPars.get()+1)
+                realY = [None]*(nPars.get()+1)
+                hands = ()
+                labs = ()
+                nSamp.set(len(df['0']))
+                data = ()
+                for i in range(0,nPars.get()+1):
+                    data = data + ((df[str(i)]-st.mean(df[str(i)])),)
+                plot1.boxplot(data)
+                canvas.draw()
+            elif calPlotType.get()==3:
+                print('Distribution')
+                eleActS.set('Element: '+str(eleScale.get()))
+                if xType.get()==0 and yType.get()==0 and (not yTypeA.get()):
+                    df = pd.read_csv('SerialData.csv')
+                else:
+                    calPlotAdjust()
+                    df = pd.read_csv('StrainCalData.csv')
+                serCSV.seek(0)
+                fig.clf()
+                plot1 = fig.add_subplot(111)
+                #plot1 = fig.add_axes([0,0,1,1])
+                data = df[str(eleAct.get())]
+                nSamp.set(len(data))
+                
+                datN = nSamp.get()
+                datMean = st.mean(data)
+                datSTD = st.stdev(data)
+                datMin = min(data)
+                datMax = max(data)
+                datRange = datMax - datMin
+                datStur = 1 + 3.322*math.log(datN)
+                datRice = 2*pow(datN,(1.0/3.0))
+
+                binMeanS.set("\u03BC:\t{:.2f}".format(datMean))
+                binSTDS.set("\u03C3:\t{:.2f}".format(datSTD))
+                binMinS.set("Min:\t{:.0f}".format(datMin))
+                binMaxS.set("Max:\t{:.0f}".format(datMax))
+                binRangeS.set("Range:\t{:.0f}".format(datRange))
+                binNS.set("N:\t{:.0f}".format(datN))
+                binRiceS.set("Rice:\t{:.2f}".format(datRice))
+                binSturS.set("Sturge's:\t{:.2f}".format(datStur))
+
+                nBin = int(nBinS.get())
+                binW = datRange/float(nBin)
+                bins = np.zeros((nBin,),dtype=int)
+                freq = np.zeros((nBin,),dtype=int)
+                for i in range(0,nBin):
+                    bins[i] = math.ceil(datMin + float(i+1)*binW)
+                bins[len(bins)-1] = math.ceil(datMax)
+                print(bins)
+                binsShift = bins - .5*binW
+                print(binsShift)
+                for value in data:
+                    for i in range(0,nBin):
+                        if value <= bins[i]:
+                            freq[i] = freq[i] + 1
+                            break
+                plot1.bar(binsShift,freq,width=.95*binW)
+                plot1.plot(binsShift,freq,linestyle='',marker='o',markeredgecolor='black',markerfacecolor='white')
+                plot1.set_ylabel('Frequency [k]',fontsize=16)
+                plot1.set_xlabel(par2.get(),fontsize=16)
+                canvas.draw()
             
     def setPlot():
         if module.get()==0:
@@ -799,7 +902,26 @@ def serial_monitor():
         plot()
 
     def calPlotConfig():
-        print(calPlotType.get())
+        if calPlotType.get()==0:
+            plotterCalPropDistFrame.pack_forget()
+            plotterCalDistFrame.pack_forget()
+            plotterCalPropFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            plotterCalXYFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            plot()
+        elif calPlotType.get()==1:
+            plotterCalPropDistFrame.pack_forget()
+            plotterCalDistFrame.pack_forget()
+            plotterCalPropFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            plotterCalXYFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            plot()
+        elif calPlotType.get()==2:
+            plot()
+        elif calPlotType.get()==3:
+            plotterCalXYFrame.pack_forget()
+            plotterCalPropBoxFrame.pack_forget()
+            plotterCalPropDistFrame.pack(side=tk.LEFT,fill=tk.BOTH,expand=True)
+            plotterCalDistFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            plot()
 
     def calPlotAdjust():
         xG = float(xScalarS.get())
@@ -843,9 +965,10 @@ def serial_monitor():
                 plotButton.pack_forget()
         elif module.get()==2:
             plotterVariableNameFrame.pack_forget()
-            plotButton.pack(side=tk.LEFT)#, padx=20)
+            plotButton.pack(side=tk.LEFT, padx=10)
+            calPlotConfig()
             plotterCalPropFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            plotterCalXYFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            #plotterCalXYFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
             input1.set('Mass [g]')
             input2.set('Force [N]')
             input3.set('Moment [N*m]')
@@ -876,6 +999,10 @@ def serial_monitor():
             v[7] = v7
             v[8] = v8
             v[9] = v9
+            eleScale.configure(to = nPars.get())
+            eleScale.to = nPars.get()
+            eleScale.set(nPars.get())
+            eleScale.config(sliderlength = int(660 / (nPars.get() + 1)))
 
     def showData():
         if datWin.get():
@@ -901,6 +1028,19 @@ def serial_monitor():
     def datWinX():
         plotterDataWindowFrame.pack_forget()
         datWin.set(False)
+
+    def eleScaleCom(event):
+        plot()
+
+    def incEleDown():
+        if eleAct.get()>0:
+            eleAct.set(eleAct.get()-1)
+            plot()
+
+    def incEleUp():
+        if eleAct.get()<nPars.get():
+            eleAct.set(eleAct.get()+1)
+            plot()
 
     def addTab():
         dat1Button.pack_forget()
@@ -1097,37 +1237,46 @@ def serial_monitor():
     plotterPlotSelectUIFrame        = tk.Frame(master=plotterPlotSelectFrame, relief=border, borderwidth=bw)#
     plotterDataWindowFrame          = tk.Frame(master=plotterDisplayFrame, relief=border, borderwidth=bw)
 
-    plotterCalPropFrame             = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)#
-    plotterCalPropBoxFrame          = tk.Frame(master=plotterCalPropFrame, relief=border, borderwidth=bw)#
-    plotterCalPropRadioFrame        = tk.Frame(master=plotterCalPropFrame, relief=border, borderwidth=bw)#
-    plotterCalXYFrame               = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXFrame                = tk.Frame(master=plotterCalXYFrame, relief=border, borderwidth=bw)#
-    plotterCalXTitleFrame           = tk.Frame(master=plotterCalXFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXBodyFrame            = tk.Frame(master=plotterCalXFrame, relief=border, borderwidth=bw)#
-    plotterCalXTopFrame             = tk.Frame(master=plotterCalXBodyFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXBotFrame             = tk.Frame(master=plotterCalXBodyFrame, relief=border, borderwidth=bw)#
-    plotterCalXBoxFrame             = tk.Frame(master=plotterCalXBotFrame, relief=border, borderwidth=bw)#
-    plotterCalXEntryFrame           = tk.Frame(master=plotterCalXBotFrame, relief=border, borderwidth=bw)#
-    plotterCalXRealButtonFrame      = tk.Frame(master=plotterCalXBotFrame, relief=border, borderwidth=bw)#
-    plotterCalXLabelFrame           = tk.Frame(master=plotterCalXEntryFrame)#, relief=border, borderwidth=bw)#
-    plotterCalXScalarFrame          = tk.Frame(master=plotterCalXEntryFrame)#, relief=border, borderwidth=bw)#
-
-    plotterCalYFrame                = tk.Frame(master=plotterCalXYFrame, relief=border, borderwidth=bw)#
-    plotterCalYTitleFrame           = tk.Frame(master=plotterCalYFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYBodyFrame            = tk.Frame(master=plotterCalYFrame, relief=border, borderwidth=bw)#
-    plotterCalYTopFrame             = tk.Frame(master=plotterCalYBodyFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYBotFrame             = tk.Frame(master=plotterCalYBodyFrame, relief=border, borderwidth=bw)#
-    plotterCalYEntryFrame           = tk.Frame(master=plotterCalYBotFrame, relief=border, borderwidth=bw)#
-    plotterCalYRealButtonFrame      = tk.Frame(master=plotterCalYBotFrame, relief=border, borderwidth=bw)#
-    plotterCalYButton2Frame         = tk.Frame(master=plotterCalYBotFrame, relief=border, borderwidth=bw)#
-    plotterCalYLabelFrame           = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYScalarFrame          = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
-    plotterCalYOffsetFrame          = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
-
     dataWindowHeaderFrame           = tk.Frame(master=plotterDataWindowFrame, relief=border, borderwidth=bw)
     dataWindowPrintFrame            = tk.Frame(master=plotterDataWindowFrame, relief=border, borderwidth=bw)
     dataWindowHeaderSelectFrame     = tk.Frame(master=dataWindowHeaderFrame, relief=border, borderwidth=bw)#
     dataWindowXButtonFrame          = tk.Frame(master=dataWindowHeaderFrame)
+
+    plotterCalPropFrame             = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)#
+    plotterCalPropBoxFrame          = tk.Frame(master=plotterCalPropFrame, relief=border, borderwidth=bw)#
+    plotterCalPropRadioFrame        = tk.Frame(master=plotterCalPropFrame, relief=border, borderwidth=bw)#
+    plotterCalPropDistFrame         = tk.Frame(master=plotterCalPropFrame, relief=border, borderwidth=bw)#
+    
+    plotterCalXYFrame               = tk.Frame(master=plotterVariableFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXFrame                = tk.Frame(master=plotterCalXYFrame, relief=border, borderwidth=bw)
+    plotterCalXTitleFrame           = tk.Frame(master=plotterCalXFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXBodyFrame            = tk.Frame(master=plotterCalXFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXTopFrame             = tk.Frame(master=plotterCalXBodyFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXBotFrame             = tk.Frame(master=plotterCalXBodyFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXBoxFrame             = tk.Frame(master=plotterCalXBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXEntryFrame           = tk.Frame(master=plotterCalXBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXRealButtonFrame      = tk.Frame(master=plotterCalXBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXLabelFrame           = tk.Frame(master=plotterCalXEntryFrame)#, relief=border, borderwidth=bw)#
+    plotterCalXScalarFrame          = tk.Frame(master=plotterCalXEntryFrame)#, relief=border, borderwidth=bw)#
+
+    plotterCalYFrame                = tk.Frame(master=plotterCalXYFrame, relief=border, borderwidth=bw)
+    plotterCalYTitleFrame           = tk.Frame(master=plotterCalYFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYBodyFrame            = tk.Frame(master=plotterCalYFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYTopFrame             = tk.Frame(master=plotterCalYBodyFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYBotFrame             = tk.Frame(master=plotterCalYBodyFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYEntryFrame           = tk.Frame(master=plotterCalYBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYRealButtonFrame      = tk.Frame(master=plotterCalYBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYButton2Frame         = tk.Frame(master=plotterCalYBotFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYLabelFrame           = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYScalarFrame          = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
+    plotterCalYOffsetFrame          = tk.Frame(master=plotterCalYEntryFrame)#, relief=border, borderwidth=bw)#
+    
+    plotterCalDistFrame             = tk.Frame(master=plotterVariableFrame, relief=border, borderwidth=bw)#
+    plotterCalEleFrame              = tk.Frame(master=plotterCalDistFrame, relief=border, borderwidth=bw)# 
+    plotterCalBinFrame              = tk.Frame(master=plotterCalDistFrame, relief=border, borderwidth=bw)#
+    plotterCalEleSliderFrame        = tk.Frame(master=plotterCalEleFrame, relief=border, borderwidth=bw)#
+    plotterCalBinEntryFrame         = tk.Frame(master=plotterCalBinFrame, relief=border, borderwidth=bw)#
+    plotterCalBinStatFrame          = tk.Frame(master=plotterCalBinFrame, relief=border, borderwidth=bw)#
     
         #generalLabel = tk.Label(master=generalLabelFrame, text="General", bg=color, font=MEDFONT, relief=border)
     indicator               = tk.Label(master=uiIndicatorFrame, image=offInd)
@@ -1138,7 +1287,7 @@ def serial_monitor():
 
     variableIDLabel         = tk.Label(master=plotterVariableEntryFrame, textvariable=varID, font=LARGEFONT)
     
-    moduleLabel           = tk.Label(master=plotterPlotSelectTextFrame, textvariable=plotID, font=LARGEFONT)
+    moduleLabel             = tk.Label(master=plotterPlotSelectTextFrame, textvariable=plotID, font=LARGEFONT)
 
     variableSelectLabel     = tk.Label(master=plotterVariableSelectFrame, text='Plot Data:', font=LARGEFONT)
     variableSelectSpacer    = tk.Label(master=plotterVariableSelectFrame, text='vs', font=LARGEFONT)
@@ -1155,6 +1304,17 @@ def serial_monitor():
     plotterCalYVfsLabel     = tk.Label(master=plotterCalYEntryFrame, textvariable=lblVfs, font=BUTTONFONT)
     plotterCalYVspanLabel   = tk.Label(master=plotterCalYEntryFrame, textvariable=lblVspan, font=BUTTONFONT)
     plotterCalYLSBLabel     = tk.Label(master=plotterCalYEntryFrame, textvariable=lblLSB, font=BUTTONFONT)
+
+    plotterCalEleLabel      = tk.Label(master=plotterCalEleFrame, textvariable=eleActS, font=MEDFONT)
+    plotterCalBinLabel      = tk.Label(master=plotterCalBinEntryFrame, text='Number of Bins: ', font=BUTTONFONT)
+    plotterCalBinMeanLabel  = tk.Label(master=plotterCalBinStatFrame, textvariable=binMeanS, font=BUTTONFONT)
+    plotterCalBinSTDLabel   = tk.Label(master=plotterCalBinStatFrame, textvariable=binSTDS, font=BUTTONFONT)
+    plotterCalBinMinLabel   = tk.Label(master=plotterCalBinStatFrame, textvariable=binMinS, font=BUTTONFONT)
+    plotterCalBinMaxLabel   = tk.Label(master=plotterCalBinStatFrame, textvariable=binMaxS, font=BUTTONFONT)
+    plotterCalBinRangeLabel = tk.Label(master=plotterCalBinStatFrame, textvariable=binRangeS, font=BUTTONFONT)
+    plotterCalBinNLabel     = tk.Label(master=plotterCalBinStatFrame, textvariable=binNS, font=BUTTONFONT)
+    plotterCalBinRiceLabel  = tk.Label(master=plotterCalBinStatFrame, textvariable=binRiceS, font=BUTTONFONT)
+    plotterCalBinSturLabel  = tk.Label(master=plotterCalBinStatFrame, textvariable=binSturS, font=BUTTONFONT)
     
         #generalCanvas = tk.Canvas(master=generalCanvasFrame)
     plotterCanvas           = tk.Canvas(master=plotterCanvasFrame, bg=color)
@@ -1167,6 +1327,10 @@ def serial_monitor():
         #generalScroll = tk.Scrollbar(master=generalScrollFrame, bg=color, variable=sc1)
     textScroll              = tk.Scrollbar(master=printFrame, orient=tk.VERTICAL)
     dataWindowScroll        = tk.Scrollbar(master=dataWindowPrintFrame, orient=tk.VERTICAL)
+
+        #generalScale = tk.Scale(...)
+    eleScale = tk.Scale(master=plotterCalEleSliderFrame,orient=tk.HORIZONTAL,command=eleScaleCom,variable=eleAct,
+                        showvalue=0,from_=0,to=0,tickinterval=1,resolution=1)
 
         #generalEntry = tk.Entry(master=generalEntryFrame, textvariable=strvar1, command=readtext)
     plotterSelect1          = tk.Entry(master=plotterVariableSelectFrame, textvariable=par1, font=MEDFONT, width=5, bd=4)
@@ -1186,6 +1350,10 @@ def serial_monitor():
     xScalarEntry.bind('<Any-KeyRelease>',calPlotAdjustK)
     yScalarEntry.bind('<Any-KeyRelease>',calPlotAdjustK)
     yOffsetEntry.bind('<Any-KeyRelease>',calPlotAdjustK)
+
+    nBinsEntry = tk.Entry(master=plotterCalBinEntryFrame, textvariable=nBinS, font=BUTTONFONT, width=15,bd=4)
+    nBinsEntry.bind('<Any-KeyRelease>',calPlotAdjustK)
+    nBinsEntry.bind('<ButtonRelease-1>',calPlotAdjustK)
 
         #generalText = tk.Text(master=generalTextFrame)
     screen = tk.Text(master=printFrame, font=BUTTONFONT, state=tk.NORMAL, height=64,
@@ -1212,6 +1380,9 @@ def serial_monitor():
                               height=12, width=12, image=pixel, compound="center")
 
     plotButton = tk.Button(master=plotterPlotSelectUIFrame, text='Plot', command=plot, font=LARGEFONT)
+
+    incLButton = tk.Button(master=plotterCalEleSliderFrame, image=lPoint, command=incEleDown)
+    incRButton = tk.Button(master=plotterCalEleSliderFrame, image=rPoint, command=incEleUp)
     
         #generalRadioButton = tk.Radiobutton(master=generalRadioButtonFrame, text="General", bg=color, font=MEDFONT, variable=bu1, value=0, activebackground=color)
     monitorButton = tk.Radiobutton(master=headerFrame, text="  Serial Monitor  ", font=MEDFONT, variable=page,
@@ -1275,6 +1446,10 @@ def serial_monitor():
     yRealVainButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=7, font=BUTTONFONT, command=yConfig, text='Vain [mV]')
     yRealDadcButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=8, font=BUTTONFONT, command=yConfig, text='Dadc [D]')
     yRealDratButton = tk.Radiobutton(master=plotterCalYRealButtonFrame, variable=yRealType, value=9, font=BUTTONFONT, command=yConfig, text='FS Ratio [D/D]')
+
+    histButton = tk.Radiobutton(master=plotterCalPropDistFrame, value=0, text='Histogram', variable=distType, font=BUTTONFONT, command=plot)
+    pdfButton = tk.Radiobutton(master=plotterCalPropDistFrame, value=1, text='PDF', variable=distType, font=BUTTONFONT, command=plot)
+    normPDFButton = tk.Radiobutton(master=plotterCalPropDistFrame, value=2, text='Normalized PDF', variable=distType, font=BUTTONFONT, command=plot)
     
         #generalBox = tk.Checkbutton(master=generalBoxFrame, text="General", variable=bx1, bg=color, activebackground=color)
     autoscrollBox = tk.Checkbutton(master=boxFrame, text="Autoscroll", variable=auto)
@@ -1290,14 +1465,16 @@ def serial_monitor():
     calAveBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Averages", variable=aveAct, command=plot)
     calTrendBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Trendline", variable=trendAct, command=plot)
     calLegendBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Legend", variable=legAct, command=plot)
-    calActualBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Actual Data", variable=realAct, command=plot)
+    calActualBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Reference Data", variable=realAct, command=plot)
     calZeroBox = tk.Checkbutton(master=plotterCalPropBoxFrame, text="Zero Output", variable=zeroAct, command=plot)
 
     xMassBox = tk.Checkbutton(master=plotterCalXBoxFrame, variable=xTypeA, font=BUTTONFONT, command=xConfig, text='Measured Data Set')
     yRatioBox = tk.Checkbutton(master=plotterCalYButton2Frame, variable=yTypeA, font=BUTTONFONT, command=yConfig, text='Full Scale Ratio')
+
+    #normXBox = tk.Checkbutton(master=plotterCal
     
         #generalMenu = tk.OptionMenu(master...)
-    plotterMenu = tk.Menubutton(master=plotterPlotSelectUIFrame, text="Plot Type", relief=tk.RAISED)
+    plotterMenu = tk.Menubutton(master=plotterPlotSelectUIFrame, text="Module", relief=tk.RAISED)
     plotterMenu.menu = tk.Menu(master=plotterMenu, tearoff=0)
     plotterMenu["menu"] = plotterMenu.menu
     plotterMenu.menu.add_radiobutton(label="y = f(x)", variable=module, value=0, command=setPlot)
@@ -1359,6 +1536,12 @@ def serial_monitor():
     plotterCalYScalarFrame.pack(anchor='e',padx=10)
     plotterCalYOffsetFrame.pack(anchor='e',padx=10)
 
+    plotterCalEleFrame.pack(side=tk.TOP,fill=tk.X)#,expand=True)
+    plotterCalEleSliderFrame.pack(side=tk.BOTTOM,fill=tk.X)
+    plotterCalBinFrame.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True)
+    plotterCalBinEntryFrame.pack(side=tk.LEFT,anchor='nw',padx=10)
+    plotterCalBinStatFrame.pack(side=tk.RIGHT,anchor='nw')
+
     dataWindowHeaderFrame.pack(side=tk.TOP, fill=tk.X)#, expand=True)
     dataWindowPrintFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
     dataWindowHeaderSelectFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -1385,9 +1568,25 @@ def serial_monitor():
     plotterCalYScalarLabel.pack(side=tk.LEFT)
     plotterCalYOffsetLabel.pack(side=tk.LEFT)
 
+    plotterCalEleLabel.pack(side=tk.TOP)
+    plotterCalBinLabel.pack(side=tk.LEFT)
+    plotterCalBinMeanLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinSTDLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinMaxLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinMinLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinRangeLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinNLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinRiceLabel.pack(side=tk.TOP,anchor='w')
+    plotterCalBinSturLabel.pack(side=tk.TOP,anchor='w')
+
         #generalScroll.pack()
     textScroll.pack(side=tk.RIGHT, fill=tk.Y)
     dataWindowScroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        #generalScale.pack()
+    incLButton.pack(side=tk.LEFT,anchor='n',pady=3)
+    eleScale.pack(side=tk.LEFT,anchor='n',fill=tk.X,expand=True)
+    incRButton.pack(side=tk.RIGHT,anchor='n',pady=3)
 
         #generalEntry.pack()
     xLabelEntry.pack(side=tk.RIGHT)
@@ -1395,6 +1594,7 @@ def serial_monitor():
     yLabelEntry.pack(side=tk.RIGHT)
     yScalarEntry.pack(side=tk.RIGHT)
     yOffsetEntry.pack(side=tk.RIGHT)
+    nBinsEntry.pack(side=tk.RIGHT)
 
         #outputCanvas.pack(fill=tk.BOTH, expand=True)
     #plotterCanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -1449,6 +1649,10 @@ def serial_monitor():
     yRealVainButton.pack(anchor='w')
     yRealDadcButton.pack(anchor='w')
     yRealDratButton.pack(anchor='w')
+
+    histButton.pack(anchor='w')
+    pdfButton.pack(anchor='w')
+    normPDFButton.pack(anchor='w')
     
         #generalBox.grid(row=0,column=0,sticky="w")
     autoscrollBox.pack(side=tk.LEFT, pady=2, padx=5)

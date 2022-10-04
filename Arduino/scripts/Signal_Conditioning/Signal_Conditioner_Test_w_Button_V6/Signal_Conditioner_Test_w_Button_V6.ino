@@ -352,7 +352,7 @@ void probe(int keep, int cut){
 
 void calStrain(){
   Serial.println("\nGenerate Signal Conditioner Calibration Curve");
-  for(int i=0;i<40;++i){
+  for(int i=0;i<50;++i){
     Serial.print("Element ");Serial.println(i);
     collect = false;
     e_state = false;
