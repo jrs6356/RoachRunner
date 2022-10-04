@@ -202,6 +202,9 @@ def serial_monitor():
     invPlot = tk.BooleanVar(master=window, value=False)
     xTypeA = tk.BooleanVar(master=window, value=True)
     yTypeA = tk.BooleanVar(master=window, value=False)
+    xNorm = tk.BooleanVar(master=window, value=False)
+    yNorm = tk.BooleanVar(master=window, value=False)
+    fXAct = tk.BooleanVar(master=window, value=False)
 
         #generalInt = tk.IntVar(master=window, value=0)
     auto = tk.IntVar(master=window, value=1)
@@ -682,25 +685,74 @@ def serial_monitor():
                 binRiceS.set("Rice:\t{:.2f}".format(datRice))
                 binSturS.set("Sturge's:\t{:.2f}".format(datStur))
 
+                #if xNorm.get():
+                    #for i in range(0,datN):
+                        #data[i] = (1.0/datSTD)*(float(data[i])-datMean)
+                    #datMin = min(data)
+                    #datMax = max(data)
+                    #datRange = datMax - datMin
+
                 nBin = int(nBinS.get())
                 binW = datRange/float(nBin)
-                bins = np.zeros((nBin,),dtype=int)
-                freq = np.zeros((nBin,),dtype=int)
-                for i in range(0,nBin):
-                    bins[i] = math.ceil(datMin + float(i+1)*binW)
-                bins[len(bins)-1] = math.ceil(datMax)
+                bins = np.zeros(nBin)
+                freq = np.zeros(nBin)
+                x = np.zeros(nBin)
+                z = np.zeros(nBin)
+                px = np.zeros(nBin)
+                fx = np.zeros(nBin)
+                fz = np.zeros(nBin)
+                if xNorm.get():
+                    #bins = np.zeros(nBin)
+                    #freq = np.zeros(nBin)
+                    for i in range(0,nBin):
+                        bins[i] = datMin + float(i+1)*binW
+                    bins[len(bins)-1] = datMax
+                else:
+                    #bins = np.zeros((nBin,),dtype=int)
+                    #freq = np.zeros((nBin,),dtype=int)
+                    for i in range(0,nBin):
+                        bins[i] = math.ceil(datMin + float(i+1)*binW)
+                    bins[len(bins)-1] = math.ceil(datMax)
                 print(bins)
-                binsShift = bins - .5*binW
-                print(binsShift)
+                x = bins - .5*binW
+                print(x)
                 for value in data:
                     for i in range(0,nBin):
                         if value <= bins[i]:
                             freq[i] = freq[i] + 1
                             break
-                plot1.bar(binsShift,freq,width=.95*binW)
-                plot1.plot(binsShift,freq,linestyle='',marker='o',markeredgecolor='black',markerfacecolor='white')
-                plot1.set_ylabel('Frequency [k]',fontsize=16)
-                plot1.set_xlabel(par2.get(),fontsize=16)
+                for i in range(0,nBin):
+                    px[i] = float(freq[i])/float(datN)
+                    fx[i] = px[i]/binW
+                    z[i] = (x[i]-datMean)/datSTD
+                    fz[i] = fx[i]*datSTD
+                
+                zAx = np.arange(-4,4,0.1)
+                zpdf = [None]*len(zAx)
+                for i in range(0,len(zAx)):
+                    zpdf[i] = math.exp(-pow(zAx[i],2)/2.0)/math.sqrt(2.0*math.pi)
+                if yNorm.get():
+                    if xNorm.get():
+                        plot1.bar(z,fz,width=.95*(z[1]-z[0]))
+                        if fXAct.get():
+                            plot1.plot(z,fz,linestyle='',marker='o',markeredgecolor='black',markerfacecolor='white')
+                            plot1.plot(zAx,zpdf)
+                    else:
+                        plot1.bar(x,fx,width=.95*(x[1]-x[0]))
+                        if fXAct.get():
+                            plot1.plot(x,fx,linestyle='',marker='o',markeredgecolor='black',markerfacecolor='white')
+                else:
+                    if xNorm.get():
+                        plot1.bar(z,freq,width=.95*(z[1]-z[0]))
+                        if fXAct.get():
+                            plot1.plot(z,freq,linestyle='',marker='o',markeredgecolor='black',markerfacecolor='white')
+                    else:
+                        plot1.bar(x,freq,width=.95*(x[1]-x[0]))
+                        if fXAct.get():
+                            plot1.plot(x,freq,linestyle='',marker='o',markeredgecolor='black',markerfacecolor='white')
+                
+                plot1.set_ylabel(par2.get(),fontsize=16)
+                plot1.set_xlabel(par1.get(),fontsize=16)
                 canvas.draw()
             
     def setPlot():
@@ -726,41 +778,101 @@ def serial_monitor():
             plotterSelect2.pack(side=tk.LEFT)
 
     def xConfig():
-        if xType.get()==1:
-            xMassBox.pack(anchor='nw',padx=20)
-            if xTypeA.get():
+        if calPlotType.get()==3:
+            print('X config dist')
+            if xNorm.get():
+                par1.set('z')
+                fXBox.config(text = 'Show f(z) points')
+            else:
+                fXBox.config(text = 'Show f(x) points')
+                if yRealType.get()==1:
+                    par1.set('Mass [g]')
+                    #yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*g*pow(10.0,6)*(xf-xs))))
+                elif yRealType.get()==2:
+                    par1.set('Force [N]')
+                    #yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9)*(xf-xs))))
+                elif yRealType.get()==3:
+                    par1.set('Moment [N*m]')
+                    #yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9))))
+                elif yRealType.get()==4:
+                    par1.set('\u03C3 [MPa]')
+                    #yScalarS.set(str(E*2.0*LSB/(Gia*Vs*S*pow(10.0,15))))
+                elif yRealType.get()==5:
+                    par1.set('\u03BC\u03B5 [mm/mm]')
+                    #yScalarS.set(str(2.0*LSB/(Gia*Vs*S*pow(10.0,3))))
+                elif yRealType.get()==6:
+                    par1.set('Vwsb [mV]')
+                    #yScalarS.set(str(LSB/(Gia*pow(10.0,6))))
+                elif yRealType.get()==7:
+                    par1.set('Vain [mV]')
+                    #yScalarS.set(str(LSB/pow(10.0,6)))
+                elif yRealType.get()==8:
+                    par1.set('ADC Output [D]')
+                    #yScalarS.set(str(1.0))
+                elif yRealType.get()==9:
+                    par1.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
+                    #yScalarS.set(str(1.0/pow(2.0,23)))
+                elif yTypeA.get():
+                    text1 = "ADC Output Ratio ["
+                    text2 = r'$\frac{{D}}{{2^{{{}}} }}$'.format(23)
+                    text3 = ("]")
+                    par1.set(text1+text2+text3)
+                    #yScalarS.set('1/8388608')
+                else:
+                    par1.set(("ADC Output $[-2^{{{}}} \leq D \leq 2^{{{}}}]$").format(23,23))
+                    #yScalarS.set('1.0')
+        else:
+            if xType.get()==1:
+                xMassBox.pack(anchor='nw',padx=20)
+                if xTypeA.get():
+                    plotterCalXLabelFrame.pack_forget()
+                    plotterCalXScalarFrame.pack_forget()
+                    xRealMassButton.pack(anchor='w')
+                    xRealForceButton.pack(anchor='w')
+                    xRealMomentButton.pack(anchor='w')
+                    xRealStressButton.pack(anchor='w')
+                    xRealStrainButton.pack(anchor='w')
+                    xRealVwsbButton.pack(anchor='w')
+                    xRealVainButton.pack(anchor='w')
+                    xRealDadcButton.pack(anchor='w')
+                    xRealDratButton.pack(anchor='w')
+                    if xRealType.get()==1:
+                        par1.set('Mass [g]')
+                    elif xRealType.get()==2:
+                        par1.set('Force [N]')
+                    elif xRealType.get()==3:
+                        par1.set('Moment [N*m]')
+                    elif xRealType.get()==4:
+                        par1.set('\u03C3 [MPa]')
+                    elif xRealType.get()==5:
+                        par1.set('\u03BC\u03B5 [mm/mm]')
+                    elif xRealType.get()==6:
+                        par1.set('Vwsb [mV]')
+                    elif xRealType.get()==7:
+                        par1.set('Vain [mV]')
+                    elif xRealType.get()==8:
+                        par1.set('ADC Output [D]')
+                    elif xRealType.get()==9:
+                        par1.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
+                    #par1.set('Mass [g]')
+                else:
+                    par1.set('Parameter [units]')
+                    xRealMassButton.pack_forget()
+                    xRealForceButton.pack_forget()
+                    xRealMomentButton.pack_forget()
+                    xRealStressButton.pack_forget()
+                    xRealStrainButton.pack_forget()
+                    xRealVwsbButton.pack_forget()
+                    xRealVainButton.pack_forget()
+                    xRealDadcButton.pack_forget()
+                    xRealDratButton.pack_forget()
+                    plotterCalXLabelFrame.pack(anchor='e',padx=10)
+                    plotterCalXScalarFrame.pack(anchor='e',padx=10)
+            else:
+                par1.set('Element [n]')
+                xMassBox.pack_forget()
                 plotterCalXLabelFrame.pack_forget()
                 plotterCalXScalarFrame.pack_forget()
-                xRealMassButton.pack(anchor='w')
-                xRealForceButton.pack(anchor='w')
-                xRealMomentButton.pack(anchor='w')
-                xRealStressButton.pack(anchor='w')
-                xRealStrainButton.pack(anchor='w')
-                xRealVwsbButton.pack(anchor='w')
-                xRealVainButton.pack(anchor='w')
-                xRealDadcButton.pack(anchor='w')
-                xRealDratButton.pack(anchor='w')
-                if xRealType.get()==1:
-                    par1.set('Mass [g]')
-                elif xRealType.get()==2:
-                    par1.set('Force [N]')
-                elif xRealType.get()==3:
-                    par1.set('Moment [N*m]')
-                elif xRealType.get()==4:
-                    par1.set('\u03C3 [MPa]')
-                elif xRealType.get()==5:
-                    par1.set('\u03BC\u03B5 [mm/mm]')
-                elif xRealType.get()==6:
-                    par1.set('Vwsb [mV]')
-                elif xRealType.get()==7:
-                    par1.set('Vain [mV]')
-                elif xRealType.get()==8:
-                    par1.set('ADC Output [D]')
-                elif xRealType.get()==9:
-                    par1.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
-                #par1.set('Mass [g]')
-            else:
-                par1.set('Parameter [units]')
                 xRealMassButton.pack_forget()
                 xRealForceButton.pack_forget()
                 xRealMomentButton.pack_forget()
@@ -770,32 +882,95 @@ def serial_monitor():
                 xRealVainButton.pack_forget()
                 xRealDadcButton.pack_forget()
                 xRealDratButton.pack_forget()
-                plotterCalXLabelFrame.pack(anchor='e',padx=10)
-                plotterCalXScalarFrame.pack(anchor='e',padx=10)
-        else:
-            par1.set('Element [n]')
-            xMassBox.pack_forget()
-            plotterCalXLabelFrame.pack_forget()
-            plotterCalXScalarFrame.pack_forget()
-            xRealMassButton.pack_forget()
-            xRealForceButton.pack_forget()
-            xRealMomentButton.pack_forget()
-            xRealStressButton.pack_forget()
-            xRealStrainButton.pack_forget()
-            xRealVwsbButton.pack_forget()
-            xRealVainButton.pack_forget()
-            xRealDadcButton.pack_forget()
-            xRealDratButton.pack_forget()
         plot()
 
     def yConfig():
-        if yType.get()==1:
-            yRatioBox.pack_forget()
-            yADCButton.pack(anchor='w', padx=20)
-            yCustomButton.pack(anchor='w', padx=20)
-            if yTypeB.get()==0:
-                par2.set('Parameter [units]')
-                yScalarS.set('1.0')
+        if calPlotType.get()==3:
+            if yNorm.get():
+                if xNorm.get():
+                    par2.set('f(z)')
+                else:
+                    par2.set('f(x)')
+            else:
+                par2.set('Frequency [N]')
+        else:
+            if yType.get()==1:
+                yRatioBox.pack_forget()
+                yADCButton.pack(anchor='w', padx=20)
+                yCustomButton.pack(anchor='w', padx=20)
+                if yTypeB.get()==0:
+                    par2.set('Parameter [units]')
+                    yScalarS.set('1.0')
+                    plotterCalYRgLabel.pack_forget()
+                    plotterCalYRoLabel.pack_forget()
+                    plotterCalYVfsLabel.pack_forget()
+                    plotterCalYVspanLabel.pack_forget()
+                    plotterCalYLSBLabel.pack_forget()
+                    yRealMassButton.pack_forget()
+                    yRealForceButton.pack_forget()
+                    yRealMomentButton.pack_forget()
+                    yRealStressButton.pack_forget()
+                    yRealStrainButton.pack_forget()
+                    yRealVwsbButton.pack_forget()
+                    yRealVainButton.pack_forget()
+                    yRealDadcButton.pack_forget()
+                    yRealDratButton.pack_forget()
+                    plotterCalYLabelFrame.pack(anchor='e',padx=10)
+                    plotterCalYScalarFrame.pack(anchor='e',padx=10)
+                    plotterCalYOffsetFrame.pack(anchor='e',padx=10)
+                elif yTypeB.get()==1:
+                    plotterCalYLabelFrame.pack_forget()
+                    plotterCalYScalarFrame.pack_forget()
+                    plotterCalYOffsetFrame.pack_forget()
+                    plotterCalYRgLabel.pack(anchor='w',padx=10)
+                    plotterCalYRoLabel.pack(anchor='w',padx=10)
+                    plotterCalYVfsLabel.pack(anchor='w',padx=10)
+                    plotterCalYVspanLabel.pack(anchor='w',padx=10)
+                    plotterCalYLSBLabel.pack(anchor='w',padx=10)
+                    yRealMassButton.pack(anchor='w')
+                    yRealForceButton.pack(anchor='w')
+                    yRealMomentButton.pack(anchor='w')
+                    yRealStressButton.pack(anchor='w')
+                    yRealStrainButton.pack(anchor='w')
+                    yRealVwsbButton.pack(anchor='w')
+                    yRealVainButton.pack(anchor='w')
+                    yRealDadcButton.pack(anchor='w')
+                    yRealDratButton.pack(anchor='w')
+                    if yRealType.get()==1:
+                        par2.set('Mass [g]')
+                        yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*g*pow(10.0,6)*(xf-xs))))
+                    elif yRealType.get()==2:
+                        par2.set('Force [N]')
+                        yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9)*(xf-xs))))
+                    elif yRealType.get()==3:
+                        par2.set('Moment [N*m]')
+                        yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9))))
+                    elif yRealType.get()==4:
+                        par2.set('\u03C3 [MPa]')
+                        yScalarS.set(str(E*2.0*LSB/(Gia*Vs*S*pow(10.0,15))))
+                    elif yRealType.get()==5:
+                        par2.set('\u03BC\u03B5 [mm/mm]')
+                        yScalarS.set(str(2.0*LSB/(Gia*Vs*S*pow(10.0,3))))
+                    elif yRealType.get()==6:
+                        par2.set('Vwsb [mV]')
+                        yScalarS.set(str(LSB/(Gia*pow(10.0,6))))
+                    elif yRealType.get()==7:
+                        par2.set('Vain [mV]')
+                        yScalarS.set(str(LSB/pow(10.0,6)))
+                    elif yRealType.get()==8:
+                        par2.set('ADC Output [D]')
+                        yScalarS.set(str(1.0))
+                    elif yRealType.get()==9:
+                        par2.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
+                        yScalarS.set(str(1.0/pow(2.0,23)))
+                    #par2.set('Voltage [mV]')
+                    #yScalarS.set(str(LSB/pow(10,6)))
+            else:
+                yCustomButton.pack_forget()
+                yADCButton.pack_forget()
+                plotterCalYLabelFrame.pack_forget()
+                plotterCalYScalarFrame.pack_forget()
+                plotterCalYOffsetFrame.pack_forget()
                 plotterCalYRgLabel.pack_forget()
                 plotterCalYRoLabel.pack_forget()
                 plotterCalYVfsLabel.pack_forget()
@@ -810,86 +985,16 @@ def serial_monitor():
                 yRealVainButton.pack_forget()
                 yRealDadcButton.pack_forget()
                 yRealDratButton.pack_forget()
-                plotterCalYLabelFrame.pack(anchor='e',padx=10)
-                plotterCalYScalarFrame.pack(anchor='e',padx=10)
-                plotterCalYOffsetFrame.pack(anchor='e',padx=10)
-            elif yTypeB.get()==1:
-                plotterCalYLabelFrame.pack_forget()
-                plotterCalYScalarFrame.pack_forget()
-                plotterCalYOffsetFrame.pack_forget()
-                plotterCalYRgLabel.pack(anchor='w',padx=10)
-                plotterCalYRoLabel.pack(anchor='w',padx=10)
-                plotterCalYVfsLabel.pack(anchor='w',padx=10)
-                plotterCalYVspanLabel.pack(anchor='w',padx=10)
-                plotterCalYLSBLabel.pack(anchor='w',padx=10)
-                yRealMassButton.pack(anchor='w')
-                yRealForceButton.pack(anchor='w')
-                yRealMomentButton.pack(anchor='w')
-                yRealStressButton.pack(anchor='w')
-                yRealStrainButton.pack(anchor='w')
-                yRealVwsbButton.pack(anchor='w')
-                yRealVainButton.pack(anchor='w')
-                yRealDadcButton.pack(anchor='w')
-                yRealDratButton.pack(anchor='w')
-                if yRealType.get()==1:
-                    par2.set('Mass [g]')
-                    yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*g*pow(10.0,6)*(xf-xs))))
-                elif yRealType.get()==2:
-                    par2.set('Force [N]')
-                    yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9)*(xf-xs))))
-                elif yRealType.get()==3:
-                    par2.set('Moment [N*m]')
-                    yScalarS.set(str(Ix*E*2.0*LSB/(Gia*Vs*S*c*pow(10.0,9))))
-                elif yRealType.get()==4:
-                    par2.set('\u03C3 [MPa]')
-                    yScalarS.set(str(E*2.0*LSB/(Gia*Vs*S*pow(10.0,15))))
-                elif yRealType.get()==5:
-                    par2.set('\u03BC\u03B5 [mm/mm]')
-                    yScalarS.set(str(2.0*LSB/(Gia*Vs*S*pow(10.0,3))))
-                elif yRealType.get()==6:
-                    par2.set('Vwsb [mV]')
-                    yScalarS.set(str(LSB/(Gia*pow(10.0,6))))
-                elif yRealType.get()==7:
-                    par2.set('Vain [mV]')
-                    yScalarS.set(str(LSB/pow(10.0,6)))
-                elif yRealType.get()==8:
-                    par2.set('ADC Output [D]')
-                    yScalarS.set(str(1.0))
-                elif yRealType.get()==9:
-                    par2.set('ADC Output Ratio ['+(r'$\frac{{D}}{{2^{{{}}} }}$'.format(23))+']')
-                    yScalarS.set(str(1.0/pow(2.0,23)))
-                #par2.set('Voltage [mV]')
-                #yScalarS.set(str(LSB/pow(10,6)))
-        else:
-            yCustomButton.pack_forget()
-            yADCButton.pack_forget()
-            plotterCalYLabelFrame.pack_forget()
-            plotterCalYScalarFrame.pack_forget()
-            plotterCalYOffsetFrame.pack_forget()
-            plotterCalYRgLabel.pack_forget()
-            plotterCalYRoLabel.pack_forget()
-            plotterCalYVfsLabel.pack_forget()
-            plotterCalYVspanLabel.pack_forget()
-            plotterCalYLSBLabel.pack_forget()
-            yRealMassButton.pack_forget()
-            yRealForceButton.pack_forget()
-            yRealMomentButton.pack_forget()
-            yRealStressButton.pack_forget()
-            yRealStrainButton.pack_forget()
-            yRealVwsbButton.pack_forget()
-            yRealVainButton.pack_forget()
-            yRealDadcButton.pack_forget()
-            yRealDratButton.pack_forget()
-            yRatioBox.pack(anchor='w',padx=15)
-            if yTypeA.get():
-                text1 = "ADC Output Ratio ["
-                text2 = r'$\frac{{D}}{{2^{{{}}} }}$'.format(23)
-                text3 = ("]")
-                par2.set(text1+text2+text3)
-                yScalarS.set('1/8388608')
-            else:
-                par2.set(("ADC Output $[-2^{{{}}} \leq D \leq 2^{{{}}}]$").format(23,23))
-                yScalarS.set('1.0')
+                yRatioBox.pack(anchor='w',padx=15)
+                if yTypeA.get():
+                    text1 = "ADC Output Ratio ["
+                    text2 = r'$\frac{{D}}{{2^{{{}}} }}$'.format(23)
+                    text3 = ("]")
+                    par2.set(text1+text2+text3)
+                    yScalarS.set('1/8388608')
+                else:
+                    par2.set(("ADC Output $[-2^{{{}}} \leq D \leq 2^{{{}}}]$").format(23,23))
+                    yScalarS.set('1.0')
         plot()
 
     def xConfigM(event):
@@ -921,7 +1026,8 @@ def serial_monitor():
             plotterCalPropBoxFrame.pack_forget()
             plotterCalPropDistFrame.pack(side=tk.LEFT,fill=tk.BOTH,expand=True)
             plotterCalDistFrame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            plot()
+            xConfig()
+            yConfig()
 
     def calPlotAdjust():
         xG = float(xScalarS.get())
@@ -999,6 +1105,8 @@ def serial_monitor():
             v[7] = v7
             v[8] = v8
             v[9] = v9
+            xConfig()
+            yConfig()
             eleScale.configure(to = nPars.get())
             eleScale.to = nPars.get()
             eleScale.set(nPars.get())
@@ -1103,8 +1211,6 @@ def serial_monitor():
             df[ele] = dat
             df.to_csv('SerialData.csv',index=False,header=head.get())
             addPlotButton()
-            xConfig()
-            yConfig()
         else:
             datID.set(data[0].rstrip())
             #print(datID.get())
@@ -1275,7 +1381,8 @@ def serial_monitor():
     plotterCalEleFrame              = tk.Frame(master=plotterCalDistFrame, relief=border, borderwidth=bw)# 
     plotterCalBinFrame              = tk.Frame(master=plotterCalDistFrame, relief=border, borderwidth=bw)#
     plotterCalEleSliderFrame        = tk.Frame(master=plotterCalEleFrame, relief=border, borderwidth=bw)#
-    plotterCalBinEntryFrame         = tk.Frame(master=plotterCalBinFrame, relief=border, borderwidth=bw)#
+    plotterCalBinSettingFrame       = tk.Frame(master=plotterCalBinFrame, relief=border, borderwidth=bw)#
+    plotterCalBinEntryFrame         = tk.Frame(master=plotterCalBinSettingFrame, relief=border, borderwidth=bw)#
     plotterCalBinStatFrame          = tk.Frame(master=plotterCalBinFrame, relief=border, borderwidth=bw)#
     
         #generalLabel = tk.Label(master=generalLabelFrame, text="General", bg=color, font=MEDFONT, relief=border)
@@ -1471,8 +1578,10 @@ def serial_monitor():
     xMassBox = tk.Checkbutton(master=plotterCalXBoxFrame, variable=xTypeA, font=BUTTONFONT, command=xConfig, text='Measured Data Set')
     yRatioBox = tk.Checkbutton(master=plotterCalYButton2Frame, variable=yTypeA, font=BUTTONFONT, command=yConfig, text='Full Scale Ratio')
 
-    #normXBox = tk.Checkbutton(master=plotterCal
-    
+    normXBox = tk.Checkbutton(master=plotterCalBinSettingFrame, variable=xNorm, font=BUTTONFONT, command=xConfig, text='Normalize Bins')
+    normYBox = tk.Checkbutton(master=plotterCalBinSettingFrame, variable=yNorm, font=BUTTONFONT, command=yConfig, text='Normalize Frequency')
+    fXBox = tk.Checkbutton(master=plotterCalBinSettingFrame, variable=fXAct, font=BUTTONFONT, command=plot, text='Show f(x) points')
+
         #generalMenu = tk.OptionMenu(master...)
     plotterMenu = tk.Menubutton(master=plotterPlotSelectUIFrame, text="Module", relief=tk.RAISED)
     plotterMenu.menu = tk.Menu(master=plotterMenu, tearoff=0)
@@ -1539,7 +1648,8 @@ def serial_monitor():
     plotterCalEleFrame.pack(side=tk.TOP,fill=tk.X)#,expand=True)
     plotterCalEleSliderFrame.pack(side=tk.BOTTOM,fill=tk.X)
     plotterCalBinFrame.pack(side=tk.BOTTOM,fill=tk.BOTH,expand=True)
-    plotterCalBinEntryFrame.pack(side=tk.LEFT,anchor='nw',padx=10)
+    plotterCalBinSettingFrame.pack(side=tk.LEFT,anchor='nw',fill=tk.BOTH,expand=True)
+    plotterCalBinEntryFrame.pack(side=tk.TOP,anchor='nw',padx=10)
     plotterCalBinStatFrame.pack(side=tk.RIGHT,anchor='nw')
 
     dataWindowHeaderFrame.pack(side=tk.TOP, fill=tk.X)#, expand=True)
@@ -1668,6 +1778,10 @@ def serial_monitor():
     calActualBox.pack(anchor='w')
     calZeroBox.pack(anchor='w')
     xMassBox.pack(anchor='nw',padx=20)
+
+    normXBox.pack(anchor='nw',padx=20)
+    normYBox.pack(anchor='nw',padx=20)
+    fXBox.pack(anchor='nw',padx=20)
 
     plotterMenu.pack(side=tk.RIGHT,pady=40,padx=60)
 
