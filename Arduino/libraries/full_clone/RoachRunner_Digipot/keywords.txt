@@ -1,0 +1,44 @@
+#######################################
+# Syntax Coloring Map SPI
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Digipot	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+init	KEYWORD2
+reset	KEYWORD2
+incr	KEYWORD2
+decr	KEYWORD2
+voltSet	KEYWORD2
+resMin	KEYWORD2
+resMax	KEYWORD2
+resSweep	KEYWORD2
+btnStep KEYWORD2
+
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+Rhl_0	LITERAL1
+Rhl_99	LITERAL1
+Ra	LITERAL1
+Rb	LITERAL1
+Rw	LITERAL1
+R1	LITERAL1
+R2	LITERAL1
+V0	LITERAL1
+Vcc	LITERAL1
+Vdes	LITERAL1
+Vref	LITERAL1
+V0_sum	LITERAL1
+V0_ave	LITERAL1
+res	LITERAL1
+MI	LITERAL1
+MI_init	LITERAL1
+MI_des	LITERAL1
