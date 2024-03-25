@@ -1,0 +1,372 @@
+void CS5532::parse(reg _a){
+  switch(_a){
+    case CommandA:
+      parseComA();
+    case CommandB:
+      parseComB();
+    case Config:
+      parseConf();
+    case Setup1:
+      parseSetup(0);
+      break;
+    case Setup2:
+      parseSetup(1);
+      break;
+    case Setup3:
+      parseSetup(2);
+      break;
+    case Setup4:
+      parseSetup(3);
+      break;
+    case Setup5:
+      parseSetup(4);
+      break;
+    case Setup6:
+      parseSetup(5);
+      break;
+    case Setup7:
+      parseSetup(6);
+      break;
+    case Setup8:
+      parseSetup(7);
+      break;
+    case Gain1:
+      parseGain(0);
+      break;
+    case Gain2:
+      parseGain(1);
+      break;
+    case Offset1:
+      parseOffset(0);
+      break;
+    case Offset2:
+      parseOffset(1);
+      break;
+    default:
+      Serial.println("Invalid Entry");
+      break;
+  }
+}
+
+void CS5532::parseComA(){
+  read8(comA.out);
+  comA.ARA = 0x7F & (d8[1]<<6);
+  comA.CS = 0x7F & ((d8[2]<<5) | (d8[3]<<4));
+  comA.RW = 0x7F & (d8[4]<<3);
+  comA.RSB = 0x7F & ((d8[5]<<2) | (d8[6]<<1) | d8[7]);
+}
+
+void CS5532::parseComB(){
+  read8(comB.out);
+  comB.MC = 0x80 | d8[1]<<6;
+  comB.CSRP = 0x80 | (d8[2]<<5) | (d8[3]<<4) | (d8[4]<<3);
+  comB.CC = 0x80 | (d8[5]<<2) | (d8[6]<<1) | d8[7];
+}
+
+void CS5532::parseConf(){
+  read32(confReg.out);
+  confReg.PSS = d32[0]<<31;
+  confReg.PDW = d32[1]<<30;
+  confReg.RS = d32[2]<<29;
+  confReg.RV = d32[3]<<28;
+  confReg.IS = d32[4]<<27;
+  confReg.GB = d32[5]<<26;
+  confReg.VRS = d32[6]<<25;
+  confReg.A1 = d32[7]<<24;
+  confReg.A0 = d32[8]<<23;
+  confReg.OLS = d32[9]<<22;
+  confReg.OGS = d32[11]<<20;
+  confReg.FRS = d32[12]<<19;
+}
+
+void CS5532::parseSetup(int _a){
+  switch(_a){
+    case 0:
+      read16(setup1.out);
+      break;
+    case 1:
+      read16(setup2.out);
+      break;
+    case 2:
+      read16(setup3.out);
+      break;
+    case 3:
+      read16(setup4.out);
+      break;
+    case 4:
+      read16(setup5.out);
+      break;
+    case 5:
+      read16(setup6.out);
+      break;
+    case 6:
+      read16(setup7.out);
+      break;
+    case 7:
+      read16(setup8.out);
+      break;
+    default:
+      Serial.println("Invalid Entry");
+      break;
+  }
+  uint16_t _cs;
+  uint16_t _g;
+  uint16_t _wr;
+  uint16_t _ub;
+  uint16_t _ol;
+  uint16_t _dt;
+  uint16_t _ocd;
+  uint16_t _og;
+  _cs = (d16[0]<<15) | (d16[1]<<14);
+  _g = (d16[2]<<13) | (d16[3]<<12) | (d16[4]<<11);
+  _wr = (d16[5]<<10) | (d16[6]<<9) | (d16[7]<<8) | (d16[8]<<7);
+  _ub = d16[9]<<6;
+  _ol = (d16[10]<<5) | (d16[11]<<4);
+  _dt = d16[12]<<3;
+  _ocd = d16[13]<<2;
+  _og = (d16[14]<<1) | d16[15];
+  switch(_a){
+    case 0:
+      setup1.CS = _cs;
+      setup1.G = _g;
+      setup1.WR = _wr;
+      setup1.UB = _ub;
+      setup1.OL = _ol;
+      setup1.DT = _dt;
+      setup1.OCD = _ocd;
+      setup1.OG = _og;
+      break;
+    case 1:
+      setup2.CS = _cs;
+      setup2.G = _g;
+      setup2.WR = _wr;
+      setup2.UB = _ub;
+      setup2.OL = _ol;
+      setup2.DT = _dt;
+      setup2.OCD = _ocd;
+      setup2.OG = _og;
+      break;
+    case 2:
+      setup3.CS = _cs;
+      setup3.G = _g;
+      setup3.WR = _wr;
+      setup3.UB = _ub;
+      setup3.OL = _ol;
+      setup3.DT = _dt;
+      setup3.OCD = _ocd;
+      setup3.OG = _og;
+      break;
+    case 3:
+      setup4.CS = _cs;
+      setup4.G = _g;
+      setup4.WR = _wr;
+      setup4.UB = _ub;
+      setup4.OL = _ol;
+      setup4.DT = _dt;
+      setup4.OCD = _ocd;
+      setup4.OG = _og;
+      break;
+    case 4:
+      setup5.CS = _cs;
+      setup5.G = _g;
+      setup5.WR = _wr;
+      setup5.UB = _ub;
+      setup5.OL = _ol;
+      setup5.DT = _dt;
+      setup5.OCD = _ocd;
+      setup5.OG = _og;
+      break;
+    case 5:
+      setup6.CS = _cs;
+      setup6.G = _g;
+      setup6.WR = _wr;
+      setup6.UB = _ub;
+      setup6.OL = _ol;
+      setup6.DT = _dt;
+      setup6.OCD = _ocd;
+      setup6.OG = _og;
+      break;
+    case 6:
+      setup7.CS = _cs;
+      setup7.G = _g;
+      setup7.WR = _wr;
+      setup7.UB = _ub;
+      setup7.OL = _ol;
+      setup7.DT = _dt;
+      setup7.OCD = _ocd;
+      setup7.OG = _og;
+      break;
+    case 7:
+      setup8.CS = _cs;
+      setup8.G = _g;
+      setup8.WR = _wr;
+      setup8.UB = _ub;
+      setup8.OL = _ol;
+      setup8.DT = _dt;
+      setup8.OCD = _ocd;
+      setup8.OG = _og;
+      break;
+  }
+}
+
+void CS5532::parseGain(int _a){
+  switch(_a){
+    case 0:
+      read32(gainReg1.out);
+      break;
+    case 1:
+      read32(gainReg2.out);
+      break;
+    default:
+      Serial.println("Invalid Entry");
+      break;
+  }
+  uint32_t _Gs[30];
+  for(int i=0;i<30;++i){
+    _Gs[i] = d32[i+2]<<(29-i);
+  }
+  switch(_a){
+    case 0:
+      gainReg1.g5p = _Gs[0];
+      gainReg1.g4p = _Gs[1];
+      gainReg1.g3p = _Gs[2];
+      gainReg1.g2p = _Gs[3];
+      gainReg1.g1p = _Gs[4];
+      gainReg1.g0 = _Gs[5];
+      gainReg1.g1 = _Gs[6];
+      gainReg1.g2 = _Gs[7];
+      gainReg1.g3 = _Gs[8];
+      gainReg1.g4 = _Gs[9];
+      gainReg1.g5 = _Gs[10];
+      gainReg1.g6 = _Gs[11];
+      gainReg1.g7 = _Gs[12];
+      gainReg1.g8 = _Gs[13];
+      gainReg1.g9 = _Gs[14];
+      gainReg1.g10 = _Gs[15];
+      gainReg1.g11 = _Gs[16];
+      gainReg1.g12 = _Gs[17];
+      gainReg1.g13 = _Gs[18];
+      gainReg1.g14 = _Gs[19];
+      gainReg1.g15 = _Gs[20];
+      gainReg1.g16 = _Gs[21];
+      gainReg1.g17 = _Gs[22];
+      gainReg1.g18 = _Gs[23];
+      gainReg1.g19 = _Gs[24];
+      gainReg1.g20 = _Gs[25];
+      gainReg1.g21 = _Gs[26];
+      gainReg1.g22 = _Gs[27];
+      gainReg1.g23 = _Gs[28];
+      gainReg1.g24 = _Gs[29];
+      break;
+    case 1:
+      gainReg2.g5p = _Gs[0];
+      gainReg2.g4p = _Gs[1];
+      gainReg2.g3p = _Gs[2];
+      gainReg2.g2p = _Gs[3];
+      gainReg2.g1p = _Gs[4];
+      gainReg2.g0 = _Gs[5];
+      gainReg2.g1 = _Gs[6];
+      gainReg2.g2 = _Gs[7];
+      gainReg2.g3 = _Gs[8];
+      gainReg2.g4 = _Gs[9];
+      gainReg2.g5 = _Gs[10];
+      gainReg2.g6 = _Gs[11];
+      gainReg2.g7 = _Gs[12];
+      gainReg2.g8 = _Gs[13];
+      gainReg2.g9 = _Gs[14];
+      gainReg2.g10 = _Gs[15];
+      gainReg2.g11 = _Gs[16];
+      gainReg2.g12 = _Gs[17];
+      gainReg2.g13 = _Gs[18];
+      gainReg2.g14 = _Gs[19];
+      gainReg2.g15 = _Gs[20];
+      gainReg2.g16 = _Gs[21];
+      gainReg2.g17 = _Gs[22];
+      gainReg2.g18 = _Gs[23];
+      gainReg2.g19 = _Gs[24];
+      gainReg2.g20 = _Gs[25];
+      gainReg2.g21 = _Gs[26];
+      gainReg2.g22 = _Gs[27];
+      gainReg2.g23 = _Gs[28];
+      gainReg2.g24 = _Gs[29];
+      break;
+    default:
+      Serial.println("Invalid Entry");
+      break;
+  }
+}
+
+void CS5532::parseOffset(int _a){
+  switch(_a){
+    case 0:
+      read32(offsetReg1.out);
+      break;
+    case 1:
+      read32(offsetReg2.out);
+      break;
+    default:
+      Serial.println("Invalid Entry");
+      break;
+  }
+  uint32_t _Os[24];
+  for(int i=0;i<24;++i){
+    _Os[i] = d32[i]<<(31-i);
+  }
+  switch(_a){
+    case 0:
+      offsetReg1.o1 = _Os[0];
+      offsetReg1.o2 = _Os[1];
+      offsetReg1.o3 = _Os[2];
+      offsetReg1.o4 = _Os[3];
+      offsetReg1.o5 = _Os[4];
+      offsetReg1.o6 = _Os[5];
+      offsetReg1.o7 = _Os[6];
+      offsetReg1.o8 = _Os[7];
+      offsetReg1.o9 = _Os[8];
+      offsetReg1.o10 = _Os[9];
+      offsetReg1.o11 = _Os[10];
+      offsetReg1.o12 = _Os[11];
+      offsetReg1.o13 = _Os[12];
+      offsetReg1.o14 = _Os[13];
+      offsetReg1.o15 = _Os[14];
+      offsetReg1.o16 = _Os[15];
+      offsetReg1.o17 = _Os[16];
+      offsetReg1.o18 = _Os[17];
+      offsetReg1.o19 = _Os[18];
+      offsetReg1.o20 = _Os[19];
+      offsetReg1.o21 = _Os[20];
+      offsetReg1.o22 = _Os[21];
+      offsetReg1.o23 = _Os[22];
+      offsetReg1.o24 = _Os[23];
+      break;
+    case 1:
+      offsetReg2.o1 = _Os[0];
+      offsetReg2.o2 = _Os[1];
+      offsetReg2.o3 = _Os[2];
+      offsetReg2.o4 = _Os[3];
+      offsetReg2.o5 = _Os[4];
+      offsetReg2.o6 = _Os[5];
+      offsetReg2.o7 = _Os[6];
+      offsetReg2.o8 = _Os[7];
+      offsetReg2.o9 = _Os[8];
+      offsetReg2.o10 = _Os[9];
+      offsetReg2.o11 = _Os[10];
+      offsetReg2.o12 = _Os[11];
+      offsetReg2.o13 = _Os[12];
+      offsetReg2.o14 = _Os[13];
+      offsetReg2.o15 = _Os[14];
+      offsetReg2.o16 = _Os[15];
+      offsetReg2.o17 = _Os[16];
+      offsetReg2.o18 = _Os[17];
+      offsetReg2.o19 = _Os[18];
+      offsetReg2.o20 = _Os[19];
+      offsetReg2.o21 = _Os[20];
+      offsetReg2.o22 = _Os[21];
+      offsetReg2.o23 = _Os[22];
+      offsetReg2.o24 = _Os[23];
+      break;
+    default:
+      Serial.println("Invalid Entry");
+      break;
+  }
+}

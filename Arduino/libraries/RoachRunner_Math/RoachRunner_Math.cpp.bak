@@ -1,0 +1,36 @@
+#include "RoachRunner_Math.h"
+#include <Arduino.h>
+
+void sciNote(float x, int d){
+	float a;
+	int b = 0;
+	if((isnan(x)) || x==0){
+		Serial.print("0.0000 E0");
+	}
+	else{
+		if(x<1.0){
+			a = 0.0;
+			while(a<1.0){
+				++b;
+				a = x * float(pow(10,b));
+			}
+			Serial.print(a,d);
+			Serial.print(" E-");
+			Serial.print(b);
+		}
+		else if(x>10.0){
+			a = 100.0;
+			while(a>10){
+				++b;
+				a = x * float(pow(10,-b));
+			}
+			Serial.print(a,d);
+			Serial.print(" E");
+			Serial.print(b);
+		}
+		else{
+			Serial.print(x,d);
+			Serial.print(" E0");
+		}
+	}
+}
